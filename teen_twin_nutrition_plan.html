@@ -1,0 +1,391 @@
+
+<h2 class="sr-only">Middle school nutrition plan for 14-year-old twin boys — Vancouver BC</h2>
+<style>
+.plan-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem;}
+.plan-tab{background:transparent;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px;}
+.plan-tab.active{background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success);font-weight:500;}
+.plan-section{display:none;}
+.plan-section.active{display:block;}
+.day-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:.875rem;}
+.day-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.day-badge{background:var(--color-background-success);color:var(--color-text-success);font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--border-radius-md);}
+.day-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin:0;}
+.items-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.item-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;}
+.item-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.item-val{font-size:13px;color:var(--color-text-primary);line-height:1.5;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:11px;padding:3px 9px;border-radius:100px;}
+.tag-prot{background:var(--color-background-success);color:var(--color-text-success);}
+.tag-cal{background:var(--color-background-warning);color:var(--color-text-warning);}
+.tag-time{background:var(--color-background-info);color:var(--color-text-info);}
+.tag-hot{background:var(--color-background-danger);color:var(--color-text-danger);}
+.note-box{background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-md);padding:12px 16px;font-size:13px;color:var(--color-text-warning);margin-bottom:1rem;line-height:1.6;}
+.pro-note{background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:12px 16px;margin-bottom:1.5rem;font-size:13px;color:var(--color-text-success);line-height:1.6;}
+.grocery-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-primary);}
+.grocery-item:last-child{border-bottom:none;}
+.grocery-cat{font-size:11px;font-weight:500;color:var(--color-text-success);margin:1.25rem 0 6px;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px;}
+.backup-card{display:flex;align-items:flex-start;gap:12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:10px;}
+.backup-num{background:var(--color-background-success);color:var(--color-text-success);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:1px;}
+.snack-row{display:flex;align-items:flex-start;gap:16px;padding:12px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.snack-row:last-child{border-bottom:none;}
+.snack-time{font-size:12px;font-weight:500;color:var(--color-text-success);min-width:120px;flex-shrink:0;}
+.total-bar{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 16px;margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;}
+</style>
+
+<div style="padding:1rem 0">
+<div class="pro-note">
+  <i class="ti ti-stethoscope" aria-hidden="true" style="font-size:15px;vertical-align:-2px;margin-right:4px;"></i>
+  <strong>Nutritionist's note:</strong> True low-carb is not appropriate for growing teen athletes — pubescent bodies and active muscles run on carbohydrates. This plan is <em>protein-forward with quality carbs and healthy fats</em>: filling, growth-supporting, and sports-ready. At 50 kg / 5'4", target intake is ~2,400–2,800 cal/day; these boys are lean for their height and need to eat well.
+</div>
+
+<div class="plan-tabs">
+  <button class="plan-tab active" onclick="switchTab('weekly')"><i class="ti ti-calendar" aria-hidden="true"></i> Weekly Plan</button>
+  <button class="plan-tab" onclick="switchTab('snacks')"><i class="ti ti-bolt" aria-hidden="true"></i> Snacks & Energy</button>
+  <button class="plan-tab" onclick="switchTab('backup')"><i class="ti ti-lifebuoy" aria-hidden="true"></i> Backup Options</button>
+  <button class="plan-tab" onclick="switchTab('grocery')"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Costco List</button>
+</div>
+
+<div class="plan-section active" id="sec-weekly">
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Monday</span>
+      <p class="day-title">Chicken & Cheese Quesadilla Stack</p>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">2 large flour tortillas, Sunday-grilled chicken strips, shredded marble cheese, salsa on the side</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">String cheese + small handful of almonds + apple slices</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Slice batch-cooked chicken, layer with cheese between two tortillas, wrap in foil. Ready in 4 min.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">Unwrap foil, place on paper towel, 60–90 sec. Folds like a pizza slice — totally normal teen food.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~48g protein</span>
+      <span class="tag tag-cal">~670 cal</span>
+      <span class="tag tag-time">4 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Tuesday</span>
+      <p class="day-title">Meatball Sub with Melted Mozzarella</p>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Sub roll, 5–6 Kirkland beef meatballs, marinara sauce, shredded mozzarella</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Baby carrots + hummus tub + clementine</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Portion meatballs from Sunday batch into a container. Pack sauce separately so bread stays dry.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">Microwave meatballs + sauce 90 sec, pour over sub roll, top with mozzarella. Let sit 20 sec to melt.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~44g protein</span>
+      <span class="tag tag-cal">~690 cal</span>
+      <span class="tag tag-time">3 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Wednesday</span>
+      <p class="day-title">Turkey & Cheese Pinwheel Wraps</p>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Large tortilla, Kirkland sliced turkey breast, marble cheese, Dijon mustard, romaine lettuce</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Kirkland Greek yogurt (full-fat) + granola bar + grape tomatoes</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Roll tight, wrap in cling film or beeswax wrap, refrigerate. Self-pack in 3 min. Boys can slice at school.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-snowflake" aria-hidden="true"></i> No microwave needed</div>
+        <div class="item-val">Served cold — looks just like store-bought sushi rolls when sliced into pinwheels. Cool factor is high.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~44g protein</span>
+      <span class="tag tag-cal">~630 cal</span>
+      <span class="tag tag-time">3 min night-before</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Thursday</span>
+      <p class="day-title">Pepperoni Pizza Wrap — the crowd pleaser</p>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Flour tortilla, jarred pizza sauce, shredded mozzarella, Kirkland pepperoni, Italian herbs</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">String cheese + trail mix + apple</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Spread sauce, scatter cheese and pepperoni, fold into quarters, wrap in foil. 4 min total.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">45–60 sec. Cheese melts perfectly. It's a personal pizza — every kid at the table will want one.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~38g protein</span>
+      <span class="tag tag-cal">~700 cal</span>
+      <span class="tag tag-time">4 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Friday</span>
+      <p class="day-title">Teriyaki Chicken Rice Box</p>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Jasmine or brown rice, Sunday-grilled chicken, Kirkland teriyaki sauce, frozen edamame (thawed)</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Banana + protein bar (their Friday "treat" — earns it after a full week)</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Layer rice → chicken → sauce → edamame in leak-proof container. 5 min. Looks like takeout.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">2 min, stir halfway. The most popular lunch at the table — the good kind of attention.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~52g protein</span>
+      <span class="tag tag-cal">~720 cal</span>
+      <span class="tag tag-time">5 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <i class="ti ti-clock" aria-hidden="true" style="font-size:15px;vertical-align:-2px;margin-right:4px;"></i>
+    <strong>Sunday Batch Cook (35–45 min, once a week):</strong> Grill 1.5 kg chicken breast on a pan or BBQ → portion for Mon & Fri. Cook a large pot of jasmine rice → Friday boxes. Reheat and portion meatballs → Tuesday container. Pack Monday–Wednesday boxes tonight. Thursday and Friday boxes go in fridge Wednesday night. <em>Zero morning effort all week.</em>
+  </div>
+</div>
+
+<div class="plan-section" id="sec-snacks">
+  <div class="pro-note">
+    <i class="ti ti-bolt" aria-hidden="true" style="font-size:15px;vertical-align:-2px;margin-right:4px;"></i>
+    Active 14-year-old boys burn 2,400–2,800 cal/day. Without strategic snacking, energy crashes mid-afternoon and sports performance tanks. The after-school window (4–6 PM) is particularly important for muscle recovery during puberty.
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 10:00–10:30 AM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Recess / break</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Protein bar + piece of fruit</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Kirkland protein bar or similar (aim for 15g+ protein, not a candy bar). Apple, banana, or clementine. Fast to eat, looks completely normal.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 12:30–1:00 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Lunch block</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Weekly lunch box + sides (see Weekly Plan tab)</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">630–720 cal, 38–52g protein depending on the day. This is the anchor meal. Don't skip sides — the string cheese and nuts matter.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 4:00–4:30 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">After school / pre-practice</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Trail mix + string cheese + banana</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">The banana provides fast glucose to fuel the first 20 min of practice. Trail mix sustains energy through drills. String cheese keeps muscle protein topped up. Pack this in the school bag the night before.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 6:00–7:00 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Post-practice recovery</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Greek yogurt + granola + almonds</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">The 30–60 min post-exercise window is the most important for muscle repair in pubescent athletes. Full-fat Greek yogurt (casein + whey) is ideal. This also prevents them from raiding everything before dinner.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem;">
+    <div class="day-card">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <i class="ti ti-package" aria-hidden="true" style="font-size:22px;color:var(--color-text-success);flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;">The "snack station" — 60 second self-packing</div>
+          <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">Keep a basket on the kitchen counter stocked with pre-portioned bags of trail mix, almonds, and granola bars. String cheese lives on the fridge door shelf. Boys grab what they need and pack their own bags the night before, independently. This builds their own nutrition habits and removes your morning load entirely.</div>
+        </div>
+      </div>
+    </div>
+    <div class="day-card">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <i class="ti ti-droplet" aria-hidden="true" style="font-size:22px;color:var(--color-text-info);flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;">Hydration reminder</div>
+          <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">Teen athletes commonly mistake thirst for hunger. A 1L water bottle (filled the night before) should go in every bag. Optional: a small chocolate milk box in the lunch bag covers post-lunch protein and electrolytes in one hit — and it's something all teens drink without a second thought.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="plan-section" id="sec-backup">
+  <div class="note-box">
+    <i class="ti ti-clock" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    All options below pack in under 3 minutes — some in 30 seconds. Keep a dedicated "backup shelf" in the pantry always stocked. These are not lesser options; they're smart fallbacks that still meet their nutritional needs.
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">1</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Deli rolls — 30 seconds <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">easiest possible</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Roll 4–5 slices of Kirkland turkey or ham around a piece of marble cheese. Drop in a container with a handful of crackers and an apple. No prep. No mess. Protein-forward and filling.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~35g protein</span><span class="tag tag-cal">~500 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">2</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">PB & jam on whole wheat — 2 minutes <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">classic standby</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Two thick slices, generous Kirkland peanut butter, jam. Add string cheese and a banana. Universally normal at any school table. Calorie-dense and surprisingly protein-rich from the PB.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~22g protein</span><span class="tag tag-cal">~580 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">3</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Rotisserie chicken + crackers — 1 minute <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">high protein</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Pull apart last night's Costco rotisserie chicken into a container. Add a handful of crackers, cheese cubes, and baby carrots. Microwave the chicken at school. No prep needed — this is pure pantry-and-fridge assembly.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~45g protein</span><span class="tag tag-cal">~550 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">4</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Grab bag — 30 seconds <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">zero cooking</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Protein bar + string cheese + trail mix bag + apple. Everything comes from the snack station or fridge door. No thought, no prep, no dishes. Keep this as the absolute floor option — it still provides ~30g protein and sustained energy.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~30g protein</span><span class="tag tag-cal">~520 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">5</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Cold quesadilla — 3 minutes <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">morning microwave at home</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Tortilla + shredded cheese, 90 sec in home microwave, cool, fold, pack cold. It's genuinely good at room temperature — similar to a cold cheese slice. Add salsa cup, string cheese, and apple.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~28g protein</span><span class="tag tag-cal">~580 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">6</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Tuna pouch + crackers + cheese — 1 minute <span style="font-size:11px;font-weight:400;color:var(--color-text-secondary)">pantry-only</span></div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Kirkland tuna pouches require no can opener and no draining. One pouch + Triscuits or Ryvita + marble cheese cubes. Very high protein, omega-3 rich, and impressively fast. Add an apple to round it out.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~38g protein</span><span class="tag tag-cal">~480 cal</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="plan-section" id="sec-grocery">
+  <div class="note-box">
+    <i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    Costco is bulk — many items last 2–4 weeks. Prices below show the weekly amortised cost. Aim to spend ~$60–70 on fresh items each visit and replenish bulk/pantry every 2–3 weeks. Target average: <strong>CAD $115–130/week</strong>.
+  </div>
+
+  <div class="grocery-cat"><i class="ti ti-meat" aria-hidden="true"></i> Proteins — buy every week</div>
+  <div class="grocery-item"><span>Kirkland Signature Rotisserie Chicken (1–2)</span><span style="color:var(--color-text-success);font-weight:500;">~$9–18</span></div>
+  <div class="grocery-item"><span>Kirkland Sliced Turkey Breast (1 kg pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$14–16</span></div>
+  <div class="grocery-item"><span>Kirkland Greek Yogurt, full-fat plain (12 × 175 g)</span><span style="color:var(--color-text-success);font-weight:500;">~$14–16</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-meat" aria-hidden="true"></i> Proteins — buy every 2 weeks (½ cost shown)</div>
+  <div class="grocery-item"><span>Kirkland Boneless Chicken Breasts (2.5–3 kg pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$12–14/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Beef Meatballs, frozen (1.5 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$9–10/wk</span></div>
+  <div class="grocery-item"><span>Kirkland String Cheese (24-count)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–7/wk</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-cheese" aria-hidden="true"></i> Dairy — buy every 2 weeks</div>
+  <div class="grocery-item"><span>Kirkland Marble Cheddar Block (1.8 kg) — shred as needed</span><span style="color:var(--color-text-success);font-weight:500;">~$9–10/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Shredded Mozzarella (1 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–7/wk</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-apple" aria-hidden="true"></i> Produce — buy every week</div>
+  <div class="grocery-item"><span>Bananas (bunch)</span><span style="color:var(--color-text-success);font-weight:500;">~$3</span></div>
+  <div class="grocery-item"><span>Apples, Gala or Fuji (3 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$7–9</span></div>
+  <div class="grocery-item"><span>Baby carrots (2 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$5</span></div>
+  <div class="grocery-item"><span>Grape tomatoes (2-pint clamshell)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–8</span></div>
+  <div class="grocery-item"><span>Clementines or seasonal citrus (5 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$7–9</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-package" aria-hidden="true"></i> Pantry — buy monthly (¼ cost shown per week)</div>
+  <div class="grocery-item"><span>Kirkland Natural Peanut Butter (1.5 kg jar)</span><span style="color:var(--color-text-success);font-weight:500;">~$3/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Tuna Pouches, flaked light (12-pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$5/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Trail Mix (1.5 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$4–5/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Raw Almonds (1.36 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$5/wk</span></div>
+  <div class="grocery-item"><span>Protein or granola bars (30–36 count box)</span><span style="color:var(--color-text-success);font-weight:500;">~$7–9/wk</span></div>
+  <div class="grocery-item"><span>Large flour tortillas (30-count bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$4/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Salsa, medium (large jar)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+  <div class="grocery-item"><span>Hummus, plain (900 g tub)</span><span style="color:var(--color-text-success);font-weight:500;">~$4–5/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Pepperoni (pre-sliced or large stick)</span><span style="color:var(--color-text-success);font-weight:500;">~$3–4/wk</span></div>
+  <div class="grocery-item"><span>Pizza / marinara sauce, jarred (2-pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$2–3/wk</span></div>
+  <div class="grocery-item"><span>Edamame, frozen shelled (1 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$2–3/wk</span></div>
+  <div class="grocery-item"><span>Sub rolls or whole wheat bread loaf</span><span style="color:var(--color-text-success);font-weight:500;">~$3–4/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Teriyaki Sauce (large bottle)</span><span style="color:var(--color-text-success);font-weight:500;">~$1–2/wk</span></div>
+
+  <div class="total-bar">
+    <span style="font-size:14px;font-weight:500;color:var(--color-text-primary);">Estimated weekly average (amortised)</span>
+    <span style="font-size:18px;font-weight:500;color:var(--color-text-success);">CAD $115–132</span>
+  </div>
+  <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px;padding:0 4px;line-height:1.5;">Prices estimated for Costco Burnaby or North Vancouver warehouse, May 2026. Buying 2 rotisserie chickens per week instead of 1 is the biggest single variable. When the pantry is fully stocked from a prior month's run, weekly spend drops to $90–100.</div>
+</div>
+</div>
+
+<script>
+function switchTab(id){
+  var tabs=document.querySelectorAll('.plan-tab');
+  var keys=['weekly','snacks','backup','grocery'];
+  tabs.forEach(function(t,i){t.classList.toggle('active',keys[i]===id);});
+  document.querySelectorAll('.plan-section').forEach(function(s){
+    s.classList.toggle('active',s.id==='sec-'+id);
+  });
+}
+</script>

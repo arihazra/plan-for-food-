@@ -1,0 +1,507 @@
+
+<h2 class="sr-only">Updated middle school nutrition plan for 14-year-old twin boys — Vancouver BC</h2>
+<style>
+.plan-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.5rem;}
+.plan-tab{background:transparent;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 14px;font-size:13px;cursor:pointer;color:var(--color-text-secondary);display:flex;align-items:center;gap:6px;}
+.plan-tab.active{background:var(--color-background-success);border-color:var(--color-border-success);color:var(--color-text-success);font-weight:500;}
+.plan-section{display:none;}
+.plan-section.active{display:block;}
+.day-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem 1.25rem;margin-bottom:.875rem;}
+.day-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.day-badge{background:var(--color-background-success);color:var(--color-text-success);font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--border-radius-md);}
+.day-title{font-size:15px;font-weight:500;color:var(--color-text-primary);margin:0;}
+.items-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.item-box{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 12px;}
+.item-label{font-size:11px;color:var(--color-text-secondary);margin-bottom:4px;display:flex;align-items:center;gap:4px;}
+.item-val{font-size:13px;color:var(--color-text-primary);line-height:1.55;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tag{font-size:11px;padding:3px 9px;border-radius:100px;}
+.tag-prot{background:var(--color-background-success);color:var(--color-text-success);}
+.tag-cal{background:var(--color-background-warning);color:var(--color-text-warning);}
+.tag-time{background:var(--color-background-info);color:var(--color-text-info);}
+.tag-hot{background:var(--color-background-danger);color:var(--color-text-danger);}
+.tag-beef{background:var(--color-background-warning);color:var(--color-text-warning);}
+.note-box{background:var(--color-background-warning);border:0.5px solid var(--color-border-warning);border-radius:var(--border-radius-md);padding:12px 16px;font-size:13px;color:var(--color-text-warning);margin-bottom:1rem;line-height:1.6;}
+.pro-note{background:var(--color-background-success);border:0.5px solid var(--color-border-success);border-radius:var(--border-radius-md);padding:12px 16px;margin-bottom:1.5rem;font-size:13px;color:var(--color-text-success);line-height:1.6;}
+.info-note{background:var(--color-background-info);border:0.5px solid var(--color-border-info);border-radius:var(--border-radius-md);padding:12px 16px;margin-bottom:1rem;font-size:13px;color:var(--color-text-info);line-height:1.6;}
+.grocery-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:13px;color:var(--color-text-primary);}
+.grocery-item:last-child{border-bottom:none;}
+.grocery-cat{font-size:11px;font-weight:500;color:var(--color-text-success);margin:1.25rem 0 6px;text-transform:uppercase;letter-spacing:.6px;display:flex;align-items:center;gap:6px;}
+.backup-card{display:flex;align-items:flex-start;gap:12px;background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1rem;margin-bottom:10px;}
+.backup-num{background:var(--color-background-success);color:var(--color-text-success);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:1px;}
+.snack-row{display:flex;align-items:flex-start;gap:16px;padding:12px 0;border-bottom:0.5px solid var(--color-border-tertiary);}
+.snack-row:last-child{border-bottom:none;}
+.snack-time{font-size:12px;font-weight:500;color:var(--color-text-success);min-width:120px;flex-shrink:0;}
+.total-bar{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 16px;margin-top:1.5rem;display:flex;justify-content:space-between;align-items:center;}
+.recipe-card{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:12px 14px;margin-top:1rem;}
+.change-badge{background:var(--color-background-info);color:var(--color-text-info);font-size:10px;font-weight:500;padding:2px 7px;border-radius:var(--border-radius-md);}
+</style>
+
+<div style="padding:1rem 0">
+
+<div class="pro-note">
+  <i class="ti ti-chart-bar" aria-hidden="true" style="font-size:15px;vertical-align:-2px;margin-right:5px;"></i>
+  <strong>Carb strategy for growing teen athletes:</strong> The goal is <em>quality carbs at the right time</em> — not restriction. Sourdough and pita (fermented or minimally processed) digest more slowly than refined carbs, blunting blood sugar spikes while fuelling muscles for hours. Paired with protein and fat at every meal, these boys will stay full from lunch through practice without the 2 PM energy crash.
+</div>
+
+<div class="plan-tabs">
+  <button class="plan-tab active" onclick="switchTab('weekly')"><i class="ti ti-calendar" aria-hidden="true"></i> Weekly Plan</button>
+  <button class="plan-tab" onclick="switchTab('snacks')"><i class="ti ti-bolt" aria-hidden="true"></i> Snacks & Energy</button>
+  <button class="plan-tab" onclick="switchTab('backup')"><i class="ti ti-lifebuoy" aria-hidden="true"></i> Backup Options</button>
+  <button class="plan-tab" onclick="switchTab('bread')"><i class="ti ti-bread" aria-hidden="true"></i> Pita vs Sourdough</button>
+  <button class="plan-tab" onclick="switchTab('grocery')"><i class="ti ti-shopping-cart" aria-hidden="true"></i> Costco List</button>
+</div>
+
+<div class="plan-section active" id="sec-weekly">
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Monday</span>
+      <p class="day-title">Sourdough Chicken & Cheddar Melt</p>
+      <span class="change-badge">sourdough</span>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">2 thick slices sourdough, Sunday-grilled chicken strips, marble cheddar, Dijon mustard</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Homemade PB energy ball × 2 + apple slices + almonds</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Layer chicken + cheese between sourdough slices, wrap tightly in foil. 3 min total.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">60–75 sec in foil partly open. Cheese melts into the bread. Tastes like a diner melt.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~50g protein</span>
+      <span class="tag tag-cal">~680 cal</span>
+      <span class="tag tag-time">3 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Tuesday</span>
+      <p class="day-title">Beef Meatball Pita Pizza</p>
+      <span class="change-badge">beef</span>
+      <span class="change-badge">pita</span>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Pita bread as pizza base, marinara sauce, mozzarella, Kirkland beef meatballs halved, Italian herbs</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Baby carrots + hummus tub + clementine</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Spread sauce on pita, lay halved meatballs, top with mozzarella. Wrap in foil. 4 min.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">90 sec on a paper plate. This is a flat personal pizza — the most coveted lunch at any middle school table.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~45g protein</span>
+      <span class="tag tag-cal">~700 cal</span>
+      <span class="tag tag-time">4 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+      <span class="tag tag-beef">beef ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Wednesday</span>
+      <p class="day-title">Roast Beef & Cheddar on Sourdough</p>
+      <span class="change-badge">beef</span>
+      <span class="change-badge">sourdough</span>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Sourdough bread, deli roast beef slices (or Sunday-cooked thin beef), marble cheddar, horseradish mayo or Dijon, romaine</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Full-fat Greek yogurt + fresh fruit + string cheese</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Build sandwich, wrap in beeswax paper or parchment. Keep dressing on the side to avoid soggy bread. 3 min.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-snowflake" aria-hidden="true"></i> No microwave needed</div>
+        <div class="item-val">Served cold — roast beef on sourdough is a classic deli sandwich. Completely normal and desirable to peers.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~46g protein</span>
+      <span class="tag tag-cal">~650 cal</span>
+      <span class="tag tag-time">3 min night-before</span>
+      <span class="tag tag-beef">beef ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Thursday</span>
+      <p class="day-title">Beef Taco Rice Bowl — the Chipotle at home</p>
+      <span class="change-badge">beef</span>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Seasoned ground beef (cumin, garlic, paprika), jasmine rice, shredded cheddar, Kirkland salsa, sour cream</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">String cheese + apple slices + almonds</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Layer rice → beef → cheese in leak-proof container. Pack salsa and sour cream in small separate tubs. 4 min.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave</div>
+        <div class="item-val">2 min, stir halfway. Add cold salsa + sour cream after. It's a DIY Chipotle bowl — immense teen credibility.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~48g protein</span>
+      <span class="tag tag-cal">~730 cal</span>
+      <span class="tag tag-time">4 min night-before</span>
+      <span class="tag tag-hot">microwave ✓</span>
+      <span class="tag tag-beef">beef ✓</span>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div class="day-header">
+      <span class="day-badge">Friday</span>
+      <p class="day-title">BBQ Chicken Pita Pocket</p>
+      <span class="change-badge">pita</span>
+    </div>
+    <div class="items-grid">
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-bowl-chopsticks" aria-hidden="true"></i> Main</div>
+        <div class="item-val">Pita pocket (cut in half), Sunday-grilled chicken, BBQ sauce, shredded marble cheese, shredded lettuce</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-apple" aria-hidden="true"></i> Sides</div>
+        <div class="item-val">Greek yogurt + banana + homemade PB energy ball (Friday treat)</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-moon" aria-hidden="true"></i> Night-before prep</div>
+        <div class="item-val">Stuff pita halves with chicken + cheese, wrap in foil. Pack BBQ sauce separately. 4 min.</div>
+      </div>
+      <div class="item-box">
+        <div class="item-label"><i class="ti ti-flame" aria-hidden="true"></i> School microwave — or cold</div>
+        <div class="item-val">Warm 45 sec if they want; excellent cold too. Drizzle BBQ sauce after heating. Pocket design = no spills.</div>
+      </div>
+    </div>
+    <div class="tag-row">
+      <span class="tag tag-prot">~50g protein</span>
+      <span class="tag tag-cal">~660 cal</span>
+      <span class="tag tag-time">4 min night-before</span>
+      <span class="tag tag-hot">optional microwave</span>
+    </div>
+  </div>
+
+  <div class="note-box">
+    <i class="ti ti-clock" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    <strong>Sunday Batch Cook (40–50 min):</strong> Grill 1.5 kg chicken breast → Mon & Fri portions. Cook jasmine rice → Thu box. Brown seasoned ground beef (cumin, garlic, salt, paprika) → Thu taco bowls. Portion Sunday meatballs → Tue pita pizzas. Make 16–20 PB energy balls (10 min, see Snacks tab) → week of snacks. Pack Mon–Wed boxes tonight. Thu–Fri boxes go in Wednesday night.
+  </div>
+</div>
+
+<div class="plan-section" id="sec-snacks">
+  <div class="pro-note">
+    <i class="ti ti-bolt" aria-hidden="true" style="font-size:15px;vertical-align:-2px;margin-right:4px;"></i>
+    All snacks here are <strong>whole food</strong> — no processed protein bars, no additives, no artificial sweeteners. The PB energy balls replace bars entirely and are something boys genuinely love making (and eating). A batch of 18–20 takes 10 minutes on Sunday.
+  </div>
+
+  <div class="recipe-card" style="margin-bottom:1.5rem;">
+    <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:10px;display:flex;align-items:center;gap:8px;"><i class="ti ti-star" aria-hidden="true" style="color:var(--color-text-warning);"></i> Sunday PB Energy Balls — the protein bar replacement</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:500;">Ingredients (makes ~20 balls)</div>
+        <div style="font-size:13px;color:var(--color-text-primary);line-height:1.8;">
+          1½ cups rolled oats<br>
+          ½ cup natural peanut butter<br>
+          3 tbsp liquid honey<br>
+          2 tbsp mini dark chocolate chips<br>
+          1 tbsp chia seeds (optional)<br>
+          Pinch of sea salt
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;color:var(--color-text-secondary);margin-bottom:6px;font-weight:500;">Method (10 min + chill)</div>
+        <div style="font-size:13px;color:var(--color-text-primary);line-height:1.8;">
+          Mix all ingredients in a bowl<br>
+          Refrigerate dough 20 min<br>
+          Roll into golf-ball sized balls<br>
+          Store in airtight container in fridge<br>
+          Keeps 1 week refrigerated<br>
+          Freeze half for the following week
+        </div>
+      </div>
+    </div>
+    <div class="tag-row" style="margin-top:10px;">
+      <span class="tag tag-prot">~8g protein per 2 balls</span>
+      <span class="tag tag-cal">~180 cal per 2 balls</span>
+      <span class="tag tag-time">10 min Sunday</span>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 10:00 AM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Recess</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">2× PB energy balls + piece of fruit</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Whole food, no wrapper guilt. Boys can grab 2 balls from a small container in their bag. Apple, banana, or clementine alongside. This replaces the protein bar cleanly — more calories per gram, better ingredients, and genuinely tastier.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 12:30 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Lunch block</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Weekly lunch box + sides (see Weekly Plan tab)</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">650–730 cal, 45–50g protein. The anchor meal. Don't skip the sides — the almonds and string cheese are what carry them through the afternoon.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 4:00–4:30 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">After school / pre-practice</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Trail mix + string cheese + banana</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">The banana provides fast-acting glucose to fuel the first 20 minutes of practice. Trail mix (nuts + dried fruit) sustains energy through drills without a blood sugar spike-and-crash. String cheese tops up protein between lunch and dinner.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> 6:00–7:00 PM<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Post-practice recovery</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Full-fat Greek yogurt + fresh fruit + a small handful of almonds</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">The 30–60 min post-exercise window is the most important for muscle repair in pubescent boys. Full-fat Greek yogurt provides both casein and whey protein — slow and fast release. This also prevents them from raiding everything before dinner.</div>
+    </div>
+  </div>
+
+  <div class="snack-row">
+    <div class="snack-time"><i class="ti ti-clock" aria-hidden="true" style="font-size:13px;vertical-align:-1px;"></i> Alternative<br><span style="font-size:11px;color:var(--color-text-tertiary);font-weight:400;">Recess option</span></div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Apple slices + peanut butter in a small container</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Zero processing, two ingredients. Pack a small reusable silicone container of natural PB alongside pre-sliced apple in a zip bag. Rotate with energy balls to keep things from going stale week to week.</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.5rem;">
+    <div class="day-card">
+      <div style="display:flex;gap:12px;align-items:flex-start;">
+        <i class="ti ti-package" aria-hidden="true" style="font-size:22px;color:var(--color-text-success);flex-shrink:0;margin-top:1px;"></i>
+        <div>
+          <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:5px;">The "snack station" — 60-second self-packing</div>
+          <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">Basket on the counter: pre-portioned trail mix bags, almonds, energy balls (in a labelled fridge container). Fridge door: string cheese, Greek yogurt, fruit. Boys pack their own bags the night before using this station — builds independence and takes zero effort from you.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="plan-section" id="sec-backup">
+  <div class="note-box">
+    <i class="ti ti-clock" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    All options pack in under 3 minutes — some in 30 seconds. No fish, no turkey anywhere. Keep the backup shelf stocked at all times. These are not lesser options; they're smart fallbacks that still meet nutritional targets.
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">1</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Ham & cheddar on sourdough — 2 minutes</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Kirkland deli ham slices, marble cheddar, Dijon, sourdough bread. Classic, fast, zero cooking. Add baby carrots and an apple. Looks identical to what half the school brings.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~32g protein</span><span class="tag tag-cal">~540 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">2</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">PB & jam on sourdough — 2 minutes</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Natural peanut butter + jam on thick sourdough. Add string cheese and a banana alongside. Calorie-dense, protein-solid, socially invisible. Sourdough makes this more filling than regular bread due to lower glycemic response.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~22g protein</span><span class="tag tag-cal">~590 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">3</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Rotisserie chicken + crackers + cheese — 1 minute</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Pull apart last night's Costco rotisserie chicken into a container. Whole grain crackers, marble cheese cubes, baby carrots. Microwave the chicken at school. Pure pantry-and-fridge assembly with no prep.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~45g protein</span><span class="tag tag-cal">~550 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">4</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Emergency grab bag — 30 seconds</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">2× PB energy balls + string cheese + trail mix bag + apple. Everything from the snack station. No thought, no prep, no dishes. The floor option — still delivers ~30g protein and 4+ hours of sustained energy.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~28g protein</span><span class="tag tag-cal">~520 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">5</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Cold pita pizza — 3 minutes morning</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Spread marinara on pita, add shredded mozzarella and pepperoni, 60 sec in home microwave, let cool, pack cold. Genuinely good at room temperature. Add a clementine and string cheese.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~26g protein</span><span class="tag tag-cal">~560 cal</span></div>
+    </div>
+  </div>
+
+  <div class="backup-card">
+    <div class="backup-num">6</div>
+    <div>
+      <div style="font-size:14px;font-weight:500;color:var(--color-text-primary);margin-bottom:4px;">Deli roast beef rolls + crackers — 1 minute</div>
+      <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.5;">Roll 4–5 slices of Kirkland deli roast beef around a chunk of cheddar. Into a container with whole grain crackers and an apple. High protein, no cooking, and something they can eat quickly between classes if needed.</div>
+      <div class="tag-row" style="margin-top:8px;"><span class="tag tag-prot">~38g protein</span><span class="tag tag-cal">~500 cal</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="plan-section" id="sec-bread">
+  <div class="info-note">
+    <i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    You are right to flag tortillas. Many commercial flour tortillas contain mono- and diglycerides, sodium propionate, DATEM, and calcium propionate — all preservatives that extend shelf life. Pita and real sourdough are both significantly cleaner. Here is how they compare for your boys.
+  </div>
+
+  <div class="day-card" style="border:2px solid var(--color-border-success);">
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <i class="ti ti-bread" aria-hidden="true" style="font-size:24px;color:var(--color-text-success);flex-shrink:0;margin-top:2px;"></i>
+      <div style="width:100%;">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px;">
+          <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);">Real sourdough — the better daily bread</div>
+          <span style="background:var(--color-background-success);color:var(--color-text-success);font-size:11px;font-weight:500;padding:3px 10px;border-radius:var(--border-radius-md);">recommended</span>
+        </div>
+        <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-top:8px;">Genuine sourdough (from a bakery or Costco's own sourdough loaf) is made with only 3 ingredients: flour, water, salt. The fermentation process partially breaks down gluten and phytic acid, making minerals more bioavailable. It also has a lower glycemic index than regular white bread — meaning slower, more sustained energy. <strong style="color:var(--color-text-primary);">Best for:</strong> Mon and Wed sandwiches and melts.</div>
+        <div class="tag-row" style="margin-top:10px;">
+          <span class="tag tag-prot">3 ingredients max</span>
+          <span class="tag tag-cal">lower GI than regular bread</span>
+          <span class="tag tag-time">fermented = better digestion</span>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--color-text-secondary);"><strong style="color:var(--color-text-primary);">What to buy:</strong> Costco carries a good sourdough round. For cleaner options, Cobs Bread and many North Van bakeries carry genuine sourdough daily. Check ingredients — the loaf should list only flour, water, salt (and possibly sourdough starter).</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <i class="ti ti-circle" aria-hidden="true" style="font-size:24px;color:var(--color-text-info);flex-shrink:0;margin-top:2px;"></i>
+      <div style="width:100%;">
+        <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;">Pita bread — great for pocket and pizza days</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">Pita is typically made from flour, water, yeast, salt — much simpler than commercial tortillas. The pocket design is genuinely useful for school (no spillage, holds fillings securely). Pita pizzas heat beautifully in a microwave. <strong style="color:var(--color-text-primary);">Best for:</strong> Tue meatball pizza, Fri BBQ chicken pocket, and backup pizza option.</div>
+        <div class="tag-row" style="margin-top:10px;">
+          <span class="tag tag-prot">minimal ingredients</span>
+          <span class="tag tag-cal">pocket = no spill</span>
+          <span class="tag tag-time">microwaves well</span>
+        </div>
+        <div style="margin-top:10px;font-size:13px;color:var(--color-text-secondary);"><strong style="color:var(--color-text-primary);">What to buy:</strong> Costco carries Stonefire or similar pita. Check labels — avoid brands with more than 5–6 ingredients. Whole wheat pita adds fibre and a lower GI. Alternatively, a Middle Eastern bakery in the North Shore area will sell fresh pita (often sold warm) with zero additives.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="day-card">
+    <div style="display:flex;gap:12px;align-items:flex-start;">
+      <i class="ti ti-x" aria-hidden="true" style="font-size:22px;color:var(--color-text-danger);flex-shrink:0;margin-top:2px;"></i>
+      <div>
+        <div style="font-size:15px;font-weight:500;color:var(--color-text-primary);margin-bottom:8px;">Why commercial flour tortillas are worth avoiding daily</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);line-height:1.6;">Standard store-brand tortillas typically contain: enriched bleached flour, hydrogenated oils, mono- and diglycerides, sodium propionate (mould inhibitor), calcium propionate, DATEM (dough conditioner), and fumaric acid. This is the standard shelf-stability package. Occasional use is not a concern, but as a daily carrier bread it adds up. Sourdough and pita deliver the same function with significantly fewer inputs.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note-box" style="margin-top:1rem;">
+    <strong>Rotation strategy:</strong> Use sourdough for Monday and Wednesday (sandwich/melt days), pita for Tuesday and Friday (pizza and pocket days), and rice as the base for Thursday. This naturally spaces out the bread types across the week and keeps the school lunch feeling varied.
+  </div>
+</div>
+
+<div class="plan-section" id="sec-grocery">
+  <div class="note-box">
+    <i class="ti ti-info-circle" aria-hidden="true" style="font-size:14px;vertical-align:-2px;margin-right:4px;"></i>
+    Updated: turkey and fish removed. Beef added (ground beef + deli roast beef). Protein bars removed and replaced with whole food snack ingredients. Tortillas reduced to pantry-only (backup use). Sourdough and pita added as primary breads.
+  </div>
+
+  <div class="grocery-cat"><i class="ti ti-meat" aria-hidden="true"></i> Proteins — buy every week</div>
+  <div class="grocery-item"><span>Kirkland Signature Rotisserie Chicken (1–2)</span><span style="color:var(--color-text-success);font-weight:500;">~$9–18</span></div>
+  <div class="grocery-item"><span>Kirkland Deli Roast Beef, sliced (500–750 g pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$12–15</span></div>
+  <div class="grocery-item"><span>Kirkland Greek Yogurt, full-fat plain (12 × 175 g)</span><span style="color:var(--color-text-success);font-weight:500;">~$14–16</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-meat" aria-hidden="true"></i> Beef & chicken — buy every 2 weeks (½ cost shown)</div>
+  <div class="grocery-item"><span>Kirkland Boneless Chicken Breasts (2.5–3 kg pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$12–14/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Ground Beef, lean (1.5–2 kg pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$10–12/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Beef Meatballs, frozen (1.5 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$9–10/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Deli Ham, sliced (for backup days)</span><span style="color:var(--color-text-success);font-weight:500;">~$5–6/wk</span></div>
+  <div class="grocery-item"><span>Kirkland String Cheese (24-count)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–7/wk</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-cheese" aria-hidden="true"></i> Dairy — buy every 2 weeks</div>
+  <div class="grocery-item"><span>Kirkland Marble Cheddar Block (1.8 kg) — grate as needed</span><span style="color:var(--color-text-success);font-weight:500;">~$9–10/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Shredded Mozzarella (1 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–7/wk</span></div>
+  <div class="grocery-item"><span>Sour cream (large tub, for taco bowls)</span><span style="color:var(--color-text-success);font-weight:500;">~$3–4/wk</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-bread" aria-hidden="true"></i> Breads — buy every week (or bakery fresh)</div>
+  <div class="grocery-item"><span>Sourdough loaf — Costco, Cobs Bread, or local North Van bakery</span><span style="color:var(--color-text-success);font-weight:500;">~$5–8</span></div>
+  <div class="grocery-item"><span>Pita bread, whole wheat (Stonefire or similar, 12-pk)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–8</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-apple" aria-hidden="true"></i> Produce — buy every week</div>
+  <div class="grocery-item"><span>Bananas (bunch)</span><span style="color:var(--color-text-success);font-weight:500;">~$3</span></div>
+  <div class="grocery-item"><span>Apples, Gala or Fuji (3 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$7–9</span></div>
+  <div class="grocery-item"><span>Baby carrots (2 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$5</span></div>
+  <div class="grocery-item"><span>Grape tomatoes (2-pint clamshell)</span><span style="color:var(--color-text-success);font-weight:500;">~$6–8</span></div>
+  <div class="grocery-item"><span>Clementines or seasonal citrus (5 lb bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$7–9</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-package" aria-hidden="true"></i> Snack & energy ball ingredients — buy monthly (¼ cost shown)</div>
+  <div class="grocery-item"><span>Kirkland Natural Peanut Butter (1.5 kg jar)</span><span style="color:var(--color-text-success);font-weight:500;">~$3/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Large Rolled Oats (for energy balls + breakfast)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+  <div class="grocery-item"><span>Raw liquid honey (large jar)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+  <div class="grocery-item"><span>Mini dark chocolate chips (bag, for energy balls)</span><span style="color:var(--color-text-success);font-weight:500;">~$1–2/wk</span></div>
+  <div class="grocery-item"><span>Chia seeds (small bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$1/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Trail Mix (1.5 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$4–5/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Raw Almonds (1.36 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$5/wk</span></div>
+  <div class="grocery-item"><span>Dried cranberries or raisins (bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+
+  <div class="grocery-cat"><i class="ti ti-package" aria-hidden="true"></i> Pantry staples — buy monthly</div>
+  <div class="grocery-item"><span>Kirkland Salsa, medium (large jar)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+  <div class="grocery-item"><span>Hummus, plain (900 g tub)</span><span style="color:var(--color-text-success);font-weight:500;">~$4–5/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Pepperoni (pre-sliced, for pita pizzas)</span><span style="color:var(--color-text-success);font-weight:500;">~$3/wk</span></div>
+  <div class="grocery-item"><span>Pizza / marinara sauce, jarred (2-pack)</span><span style="color:var(--color-text-success);font-weight:500;">~$2–3/wk</span></div>
+  <div class="grocery-item"><span>Kirkland BBQ Sauce</span><span style="color:var(--color-text-success);font-weight:500;">~$1/wk</span></div>
+  <div class="grocery-item"><span>Kirkland Teriyaki Sauce (large bottle)</span><span style="color:var(--color-text-success);font-weight:500;">~$1/wk</span></div>
+  <div class="grocery-item"><span>Edamame, frozen shelled (1 kg bag)</span><span style="color:var(--color-text-success);font-weight:500;">~$2–3/wk</span></div>
+  <div class="grocery-item"><span>Flour tortillas, large (backup use only, 30-count)</span><span style="color:var(--color-text-success);font-weight:500;">~$2/wk</span></div>
+  <div class="grocery-item"><span>Whole grain crackers (Triscuit or Ryvita style)</span><span style="color:var(--color-text-success);font-weight:500;">~$3/wk</span></div>
+  <div class="grocery-item"><span>Kirkland taco seasoning or cumin / garlic / paprika</span><span style="color:var(--color-text-success);font-weight:500;">~$1/wk</span></div>
+
+  <div class="total-bar">
+    <span style="font-size:14px;font-weight:500;color:var(--color-text-primary);">Estimated weekly average (amortised)</span>
+    <span style="font-size:18px;font-weight:500;color:var(--color-text-success);">CAD $118–135</span>
+  </div>
+  <div style="font-size:12px;color:var(--color-text-tertiary);margin-top:8px;padding:0 4px;line-height:1.5;">The addition of ground beef and roast beef slightly increases the weekly protein cost over the previous plan, offset by removing protein bars (~$8–10/wk savings). Real sourdough from a bakery costs more than Costco bread but is better quality — budget $6–8/wk for it. If spend runs over, buying one rotisserie chicken instead of two is the easiest lever.</div>
+</div>
+
+</div>
+
+<script>
+function switchTab(id){
+  var keys=['weekly','snacks','backup','bread','grocery'];
+  document.querySelectorAll('.plan-tab').forEach(function(t,i){t.classList.toggle('active',keys[i]===id);});
+  document.querySelectorAll('.plan-section').forEach(function(s){s.classList.toggle('active',s.id==='sec-'+id);});
+}
+</script>
