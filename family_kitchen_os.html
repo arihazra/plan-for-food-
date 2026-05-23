@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a3309" />
+  <title>Family Kitchen OS</title>
+  <!--
+    Family Kitchen OS — unified meal + shopping system for a family of 4.
+    Wife's Week 1 plan locked. Husband + boys adapt. Three shopping cadences.
+    Standalone HTML. Open directly in any modern browser. No build step.
+    Storage uses localStorage (per-browser, per-device).
+  -->
+  <script crossorigin src="https://unpkg.com/react@18.3.1/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.25.6/babel.min.js"></script>
+  <style>
+    html, body { margin: 0; padding: 0; }
+    body { background: #faf7f2; -webkit-font-smoothing: antialiased; }
+    #loader { display: flex; align-items: center; justify-content: center; min-height: 100vh; font-family: Georgia, serif; color: #2d5016; font-size: 14px; }
+    #loader::after { content: ''; width: 28px; height: 28px; border: 3px solid #d8f3dc; border-top-color: #2d5016; border-radius: 50%; animation: spin .8s linear infinite; margin-left: 12px; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div id="root"><div id="loader">Loading kitchen…</div></div>
+  <script type="text/babel" data-presets="react">
+
+const { useState, useEffect } = React;
+
+
+// ════════════════════════════════════════════════════════════════════
+// FAMILY KITCHEN OS — unified meal + shopping system
+// Wife's Week 1 plan is LOCKED. Husband adapts to her cooking.
+// Boys diverge when needed (no fish, beef-heavy).
+// Max 2 cooking tracks per dinner.
+// ════════════════════════════════════════════════════════════════════
+
+const COLORS = {
+  wife:    { fg: "#2d6a4f", bg: "#d8f3dc", tag: "YOU"  },
+  husband: { fg: "#1d3557", bg: "#dbe4ff", tag: "HIM"  },
+  boys:    { fg: "#c45000", bg: "#ffe8d6", tag: "BOYS" },
+};
+
+const FAMILY = [
+  {
+    id: "wife", name: "You", emoji: "🌿",
+    age: 42, weight: "75 kg", height: "5'0\"",
+    bmr: 1332, tdee: 1310, target: 1200,
+    protein: 100, carbs: 110, fat: 40,
+    conditions: "Hypothyroid · PCOD · Mounjaro 10 mg (Fri PM)",
+    goal: "Lose 13–15 kg over 9–12 months",
+    rules: [
+      "Synthroid 90 min before eating — nothing else with it",
+      "Metformin ER 1000 mg WITH Monday lunch",
+      "Dinner before 8 PM · No rice at dinner",
+      "3.5 L water daily with pink salt + lemon",
+      "Mounjaro Fri eve — lighter dinner, more water Sat",
+      "Acupuncture Tue + Thu — 500 ml water before + after",
+    ],
+  },
+  {
+    id: "husband", name: "Husband", emoji: "💙",
+    age: 48, weight: "90 kg", height: "5'8\"",
+    bmr: 1744, tdee: 2267, target: 1800,
+    protein: 130, carbs: 120, fat: 65,
+    conditions: "Prediabetic · High HbA1c · Remote work",
+    goal: "Lose ~10 kg, normalise HbA1c to <5.7",
+    rules: [
+      "Whole-wheat roti only — no white bread ever",
+      "Zero refined sugar or juice",
+      "Check blood sugar 2 h after biggest meal",
+      "20-min walk after dinner — non-negotiable",
+      "Roti not rice at dinner (matches wife's pattern)",
+    ],
+  },
+  {
+    id: "boys", name: "Each Boy ×2", emoji: "🔥",
+    age: 14, weight: "50 kg each", height: "5'4\"",
+    bmr: 1451, tdee: 2250, target: 2400,
+    protein: 140, carbs: 280, fat: 85,
+    conditions: "Active · Growing · No fish · Love beef",
+    goal: "Support growth, muscle, sustained energy",
+    rules: [
+      "Never skip breakfast before school",
+      "Protein within 30 min of evening practice",
+      "Complex carbs only — no energy drinks or chips",
+      "Calcium daily — curd, cheese, yogurt",
+      "PB energy balls replace protein bars entirely",
+    ],
+  },
+];
+
+// Reconciled 7-day plan. Wife's column = Week 1 verbatim. Husband adapts.
+// Boys diverge where needed. Each day shows cookStrategy with track count.
+const WEEK = [
+  {
+    tag: "MON", day: "Monday", effort: "🟢 Easy",
+    cookStrategy: "1 track. Sat's chicken soup reheats for everyone. Wife's locked portion + bigger bowls + roti for husband + extra chicken/rice for boys.",
+    breakfast: {
+      wife:    { meal: "Masala Egg Bhurji (3 eggs)",  detail: "Onion · tomato · chilli · turmeric · 1 tsp ghee. Coffee AFTER.", p: 21, cal: 280 },
+      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan, after yours. Roti on tawa 2 min.",                    p: 26, cal: 370 },
+      boys:    { meal: "Beef wrap × 2 each",          detail: "Sunday's beef mince + 1 egg per wrap in WW tortilla. Grab and go.", p: 44, cal: 620 },
+    },
+    lunch: {
+      wife:    { meal: "Chicken Dal Rice Bowl",       detail: "½ cup sella basmati · 150 g rotisserie chicken · 1 c masur dal · cucumber-tomato salad · 1 tsp ghee. **Metformin ER 1000 mg with this meal.**", p: 42, cal: 480 },
+      husband: { meal: "Chicken Dal — no rice",       detail: "Same chicken + dal, 1 WW roti instead of rice. Salad on side.", p: 44, cal: 460 },
+      boysSchool: true,
+    },
+    boysSchool: {
+      name: "Beef mince rice thermos",
+      items: ["150 g Sunday batch beef mince", "1 c cooked rice in thermos", "1 apple", "30 g Kirkland mixed nuts", "1 Oikos yogurt cup"],
+      tip: "Pack Sunday night. Thermos keeps rice warm till lunch.",
+      p: 45, cal: 820,
+    },
+    snack: {
+      wife:    { meal: "2 boiled eggs + cucumber",  detail: "Phone alarm at 4 PM. Prevents 6 PM hunger crash.", p: 12, cal: 150 },
+      husband: { meal: "2 boiled eggs + 1 apple",    detail: "Same eggs. Apple has fiber to flatten the curve.", p: 14, cal: 200 },
+      boys:    { meal: "PB energy ball ×2 + apple + string cheese", detail: "Post-school, before practice. Calcium top-up.", p: 18, cal: 320 },
+    },
+    dinner: {
+      wife:    { meal: "Chicken Vegetable Soup 🔒",  detail: "Sat's batch — reheat. Zucchini · spinach · carrot · ginger. **No rice.**", p: 28, cal: 290 },
+      husband: { meal: "Same soup + 2 WW roti",      detail: "Bigger bowl + extra shredded chicken. Roti instead of rice.", p: 38, cal: 480 },
+      boys:    { meal: "Same soup + extra chicken + 1.5 c rice + 1 roti each", detail: "Same pot, generous serving + carbs.", p: 50, cal: 720 },
+    },
+  },
+  {
+    tag: "TUE", day: "Tuesday", effort: "🟡 2 tracks at dinner — keema for boys",
+    cookStrategy: "2 tracks. Reheat Sun batch dal → wife/husband. Boys' keema pan (10 min from pre-cooked mince). Total 12 min active.",
+    breakfast: {
+      wife:    { meal: "Greek Yogurt & Egg Bowl",        detail: "200 g Oikos 0% · 2 boiled eggs · 5 walnuts · cinnamon. **Acupuncture today — 500 ml water before.**", p: 28, cal: 310 },
+      husband: { meal: "2 boiled eggs + yogurt + 1 roti", detail: "Sunday eggs. Roti tawa 2 min.",       p: 24, cal: 340 },
+      boys:    { meal: "Yogurt + 2 boiled eggs + nuts each", detail: "Zero cook. 200 g yogurt + Sunday eggs + 30 g nuts.", p: 32, cal: 480 },
+    },
+    lunch: {
+      wife:    { meal: "Baked Salmon + Chana Dal",        detail: "150 g salmon (turmeric + lemon + salt, 18 min @ 400 F) · 1 c chana dal · ½ c rice · sautéed spinach.", p: 44, cal: 490 },
+      husband: { meal: "Same salmon + dal + 1 roti",      detail: "Salmon is excellent for prediabetes. Roti instead of rice.", p: 46, cal: 460 },
+      boysSchool: true,
+    },
+    boysSchool: {
+      name: "Chicken wrap + cheese",
+      items: ["Leftover Mon chicken 150 g", "1 WW tortilla", "1 cheese slice", "1 banana", "30 g mixed nuts"],
+      tip: "Wrap cold chicken in tortilla with cheese. 2-min pack Monday night.",
+      p: 40, cal: 780,
+    },
+    snack: {
+      wife:    { meal: "Cottage Cheese Bowl",         detail: "100 g Kirkland cottage cheese · 5 almonds · cucumber. **Acupuncture — 500 ml water after.**", p: 14, cal: 140 },
+      husband: { meal: "Cottage cheese + cucumber",    detail: "Same — protein + low-GI.", p: 14, cal: 140 },
+      boys:    { meal: "Trail mix + string cheese + banana", detail: "Pre-practice fuel. Banana = fast glucose.", p: 14, cal: 320 },
+    },
+    dinner: {
+      wife:    { meal: "Masur Dal Soup + 1 egg 🔒",   detail: "1.5 c red lentil dal thinned to soup · 1 boiled egg stirred in · lemon + cumin · 1 small roti if hungry.", p: 22, cal: 280 },
+      husband: { meal: "Same dal (bigger) + 1 egg + 2 roti", detail: "Bigger bowl. Egg + 2 roti for fullness.", p: 30, cal: 420 },
+      boys:    { meal: "Beef Keema + dal + 1.5 c rice + 1 roti each", detail: "Reheat Sun batch mince with onion+tomato 10 min. Eat alongside parents' dal.", p: 52, cal: 780 },
+    },
+  },
+  {
+    tag: "WED", day: "Wednesday", effort: "🟡 2 fast pans — 12 min total",
+    cookStrategy: "2 tracks, both fast. Prawn stir-fry for wife+husband (one pan). Beef stir-fry for boys (one pan). Same veg, same aromatics, parallel cook.",
+    breakfast: {
+      wife:    { meal: "Spinach Mushroom Omelette",   detail: "3 eggs · spinach · 4–5 mushrooms · 1 tsp olive oil · turmeric. No bread.", p: 21, cal: 260 },
+      husband: { meal: "3 eggs + 1 WW roti",          detail: "Same pan after yours. Roti on tawa.", p: 25, cal: 360 },
+      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Big scramble in one pan. Toaster runs in parallel.", p: 36, cal: 560 },
+    },
+    lunch: {
+      wife:    { meal: "Rotisserie Chicken + Mug Dal + Rice", detail: "150 g chicken (skin off) · 1 c moong dal · ½ c rice · bhindi or any veg stir-fry · 1 tsp ghee.", p: 40, cal: 470 },
+      husband: { meal: "Same chicken + dal + 1 roti", detail: "Roti not rice. Veg stir-fry generous.", p: 42, cal: 450 },
+      boysSchool: true,
+    },
+    boysSchool: {
+      name: "Beef burger patty + WW bun",
+      items: ["1 Sunday frozen beef patty (pan-fry in morning)", "1 whole wheat bun", "Cheese slice + lettuce + tomato", "1 apple", "30 g mixed nuts"],
+      tip: "Fry patty during breakfast — same pan, same time. Assemble in 3 min.",
+      p: 48, cal: 850,
+    },
+    snack: {
+      wife:    { meal: "2 eggs + small handful nuts", detail: "Measure the nuts — 20 g is easy to overdo. Green tea.", p: 14, cal: 200 },
+      husband: { meal: "2 eggs + nuts + apple",       detail: "Slightly bigger portion than yours.", p: 16, cal: 260 },
+      boys:    { meal: "PB energy balls ×2 + apple",  detail: "Pre-practice fuel.", p: 12, cal: 240 },
+    },
+    dinner: {
+      wife:    { meal: "Prawn Stir Fry 🔒",           detail: "150 g Kirkland prawns (thaw in morning) · peppers · zucchini · broccoli · ginger · garlic · low-sodium soy · 1 tsp sesame oil. **No rice.** 12 min.", p: 28, cal: 260 },
+      husband: { meal: "Same prawn stir fry + 2 roti", detail: "Bigger prawn portion (200 g) + WW roti.", p: 38, cal: 460 },
+      boys:    { meal: "Beef stir-fry + rice + 1 roti each", detail: "Sun batch beef in 2nd pan, same veg + aromatics. 12 min parallel.", p: 50, cal: 740 },
+    },
+  },
+  {
+    tag: "THU", day: "Thursday", effort: "🟢 Easy — fridge raid + reheat",
+    cookStrategy: "2 light tracks. Wife's bone broth + egg drop (8 min). Boys reheat dal + cook beef in one pan (10 min). Husband piggybacks on both.",
+    breakfast: {
+      wife:    { meal: "Smoked Salmon + 2 Eggs",      detail: "80 g Kirkland smoked salmon · 2 boiled eggs · cucumber + lemon. Zero cook. **Acupuncture — water before + after.**", p: 28, cal: 290 },
+      husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Same Thursday routine — consistency.", p: 26, cal: 360 },
+      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Big scramble · WW toast · 10 min.", p: 36, cal: 560 },
+    },
+    lunch: {
+      wife:    { meal: "Fish Fillet + Dal + Rice",    detail: "150 g tilapia (pan-fry 3 min/side, turmeric+lemon+salt) · 1 c chana/masur dal · ½ c rice · raita (100 g curd + cucumber + cumin).", p: 44, cal: 480 },
+      husband: { meal: "Same fish + dal + 1 roti",    detail: "White fish is excellent for prediabetes.", p: 44, cal: 450 },
+      boysSchool: true,
+    },
+    boysSchool: {
+      name: "Chicken rice thermos + 2 eggs",
+      items: ["150 g chicken (fresh or leftover)", "1 c rice in thermos", "2 boiled eggs", "1 orange or banana", "30 g mixed nuts"],
+      tip: "Fill thermos with hot rice + chicken in morning. Eggs from fridge.",
+      p: 48, cal: 800,
+    },
+    snack: {
+      wife:    { meal: "Curd Bowl",                   detail: "150 g dahi · pinch cumin · 5 Kirkland pumpkin seeds. Mg top-up.", p: 10, cal: 130 },
+      husband: { meal: "Curd + nuts + cucumber",      detail: "Same curd. Add 10 nuts + cucumber.", p: 14, cal: 200 },
+      boys:    { meal: "Trail mix + string cheese",   detail: "Calcium + sustained energy.", p: 10, cal: 280 },
+    },
+    dinner: {
+      wife:    { meal: "Bone Broth Egg Drop Soup 🔒", detail: "2 c Pacific bone broth · 2 eggs whisked + dropped in while boiling · spinach · ginger · spring onion · squeeze lemon. **8 min.**", p: 22, cal: 220 },
+      husband: { meal: "Same broth (bigger) + chicken + 2 roti", detail: "Bigger bowl + shred in 100 g chicken + 2 WW roti.", p: 36, cal: 460 },
+      boys:    { meal: "Beef stir-fry + reheated dal + rice", detail: "Last of Sun batch beef. Dal reheats. 10 min.", p: 50, cal: 740 },
+    },
+  },
+  {
+    tag: "FRI", day: "Friday", effort: "⚠️ Mounjaro eve — your dinner is small",
+    cookStrategy: "1 track. Big chicken soup pot for everyone. Wife's bowl is small tonight (Mounjaro nausea risk). Husband + boys eat normally.",
+    breakfast: {
+      wife:    { meal: "Protein Yogurt Bowl",         detail: "200 g Oikos · 2 boiled eggs · 1 tbsp Kirkland almond butter · cinnamon. **Eat well — Mounjaro tonight, nausea may follow.**", p: 30, cal: 350 },
+      husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Consistent Fri.", p: 26, cal: 360 },
+      boys:    { meal: "Beef wrap × 2 each",          detail: "Last of the week's mince + egg in WW tortilla.", p: 44, cal: 620 },
+    },
+    lunch: {
+      wife:    { meal: "Chicken Tikka + Dal + Rice",  detail: "200 g chicken marinated in curd + spices, grilled · 1 c dal tadka · ½ c rice · salad. **Eat by 1 PM — Mounjaro evening kills appetite later.**", p: 48, cal: 490 },
+      husband: { meal: "Same tikka + dal + 1 roti",   detail: "Roti not rice. Bigger salad.", p: 48, cal: 460 },
+      boysSchool: true,
+    },
+    boysSchool: {
+      name: "Beef wrap + cheese + yogurt",
+      items: ["150 g remaining beef mince in WW tortilla", "1 cheese slice", "Cucumber + carrot sticks", "1 Oikos yogurt cup", "30 g mixed nuts"],
+      tip: "Quick Friday morning assembly — 3 minutes.",
+      p: 44, cal: 820,
+    },
+    snack: {
+      wife:    { meal: "1 egg + cottage cheese + cucumber", detail: "Light — Mounjaro evening, don't load up.", p: 16, cal: 160 },
+      husband: { meal: "Egg + nuts",                   detail: "Same as Wed. Routine.", p: 14, cal: 200 },
+      boys:    { meal: "PB energy ball + apple + string cheese", detail: "Pre-practice.", p: 16, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Light Lentil Soup + 1 egg 🔒", detail: "Small bowl Amy's Organic Lentil Soup · 1 boiled egg stirred in · lemon + coriander. **7 PM. Stop eating after this.**", p: 18, cal: 240 },
+      husband: { meal: "Big chicken-veg soup + 2 roti", detail: "Use Pacific broth + rotisserie chicken + veg. Bigger bowl.", p: 34, cal: 500 },
+      boys:    { meal: "Big chicken soup + extra chicken + 1.5 c rice + 2 roti each", detail: "Same pot as husband. Generous portions.", p: 44, cal: 700 },
+    },
+  },
+  {
+    tag: "SAT", day: "Saturday", effort: "🟡 Family lunch + Sat dinner batch",
+    cookStrategy: "Big cultural lunch — everyone eats the same. Goat curry + dal + rice. Sat dinner = the BIG batch chicken soup (cooks Mon + Tue dinner too).",
+    breakfast: {
+      wife:    { meal: "Weekend Egg Feast",           detail: "3 eggs any style · 1 slice multigrain toast (no jam) · sliced tomato + cucumber · masala chai (no sugar). Take your time. Sit down.", p: 21, cal: 310 },
+      husband: { meal: "3 eggs + 1 WW roti + small chai", detail: "Enjoy slowly. No sugar in chai.", p: 25, cal: 370 },
+      boys:    { meal: "4 eggs + beef mince + WW toast each", detail: "Big weekend breakfast. Fuel before any morning activity.", p: 48, cal: 680 },
+    },
+    lunch: {
+      wife:    { meal: "Goat Curry + Dal + Rice 🔒",  detail: "150 g goat (boneless) kosha or simple curry · 1 c masur dal · ½ c rice · light begun bhaja · 1 tsp ghee. Saturday is your cultural meal day. Enjoy fully.", p: 38, cal: 510 },
+      husband: { meal: "Same goat + dal + 2 roti",    detail: "200 g goat. Roti not rice.", p: 42, cal: 530 },
+      boys:    { meal: "Same goat + dal + 1.5 c rice + 1 roti each", detail: "Generous portions. Family meal.", p: 50, cal: 780 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Walk first, then 2 eggs + green tea", detail: "45-min weekend walk before snack. Pair it with the snack as reward.", p: 12, cal: 150 },
+      husband: { meal: "Walk together + nuts on return", detail: "Husband 20-min walk minimum. Joint cardio.", p: 8, cal: 180 },
+      boys:    { meal: "Trail mix + string cheese",   detail: "Or anything — Saturday is flexible.", p: 10, cal: 280 },
+    },
+    dinner: {
+      wife:    { meal: "Chicken Soup — Big Batch 🔒", detail: "300 g chicken + Pacific bone broth + zucchini + spinach + carrot + ginger. Make BIG. **Eat 1 bowl. Store rest for Mon + Tue.**", p: 30, cal: 290 },
+      husband: { meal: "Same soup + 2 WW roti",       detail: "Bigger bowl from same pot. Roti.", p: 38, cal: 490 },
+      boys:    { meal: "Same soup + extra chicken + rice + 1 roti each", detail: "Big bowl + extras from same pot.", p: 52, cal: 730 },
+    },
+  },
+  {
+    tag: "SUN", day: "Sunday", effort: "🔴 90-min Batch Cook at 4 PM",
+    cookStrategy: "Light cooking until 4 PM. Then the 90-min reset session that runs the entire week. Sunday is non-negotiable.",
+    breakfast: {
+      wife:    { meal: "Smoked Salmon Plate",         detail: "80 g Kirkland smoked salmon · 2 boiled eggs · 100 g Greek yogurt · cucumber + lemon. Rest day. No rushing.", p: 32, cal: 320 },
+      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan after yours.", p: 24, cal: 340 },
+      boys:    { meal: "Yogurt + 2 eggs + WW toast each", detail: "Simple Sunday — save energy for the week ahead.", p: 30, cal: 500 },
+    },
+    lunch: {
+      wife:    { meal: "Prawn Dal Rice 🔒",           detail: "150 g Kirkland prawns · 1 c chana dal · ½ c rice · stir-fried veg · curd on side. Prep dal in morning (20 min pressure cooker).", p: 40, cal: 470 },
+      husband: { meal: "Same prawn + dal + 1 roti",   detail: "Bigger prawn. Roti.", p: 42, cal: 450 },
+      boys:    { meal: "Same prawn + dal + 1.5 c rice + 1 roti each", detail: "OR leftover Sat goat curry if any.", p: 48, cal: 720 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Prep window + 100 g cottage cheese + 5 walnuts", detail: "**4 PM = batch cook starts.** Boil 8–10 eggs while you eat this. 20 min of work = whole week sorted.", p: 14, cal: 170 },
+      husband: { meal: "Same window — helps chop veg", detail: "Join the prep. Walk after.", p: 10, cal: 200 },
+      boys:    { meal: "Can help portion nuts + bag",  detail: "Builds independence. Their lunchboxes, their job.", p: 8, cal: 250 },
+    },
+    dinner: {
+      wife:    { meal: "Dal Soup + 1 Roti + 1 Egg 🔒", detail: "Thin batch dal with water + lemon + ginger to soup consistency. 1 roti. 1 boiled egg. Easy Sunday. **8 min reheat.**", p: 22, cal: 280 },
+      husband: { meal: "Same dal soup + 2 roti + 1 egg", detail: "Bigger bowl. 2 roti.", p: 28, cal: 360 },
+      boys:    { meal: "Big dal soup + 2 eggs + 2 roti each", detail: "Generous bowl + boiled eggs.", p: 36, cal: 500 },
+    },
+  },
+];
+
+// ───────────────────────────────────────────────────────────────────
+// Sunday 90-min Batch Cook (4:00 – 5:30 PM)
+// ───────────────────────────────────────────────────────────────────
+const SUNDAY_BATCH = [
+  { mins: 12, task: "Boil 12 eggs",                          covers: "Mon + Tue breakfasts · all weekday snacks · Sun/Mon dinner egg" },
+  { mins: 20, task: "Pressure cook masur + chana dal",       covers: "Mon dinner (wife already from Sat soup), Tue dinner dal soup, Wed lunch dal, Thu dinner dal reheat" },
+  { mins: 20, task: "Cook 1 kg beef mince with spices",      covers: "Mon boys' breakfast wraps + Mon boys' school lunch + Tue dinner keema base + Fri boys' breakfast wraps" },
+  { mins: 10, task: "Shape + freeze 4 beef burger patties",  covers: "Wed boys' school lunch — fry in morning during breakfast" },
+  { mins: 5,  task: "Marinate 2 kg chicken breast (curd + spices)", covers: "Used Fri lunch chicken tikka + Wed lunch + thermos chicken" },
+  { mins: 15, task: "Chop all veg for the week",             covers: "Onions, peppers, zucchini, spinach, ginger-garlic paste — saves 5–8 min per meal" },
+  { mins: 5,  task: "Portion nuts: 7 bags × 30 g per boy",   covers: "All week boys' lunchboxes — zero morning effort" },
+  { mins: 3,  task: "Make Mon morning beef wrap filling",    covers: "Mon boys' breakfast — grab and go" },
+];
+
+const BATCH_OUTPUTS = [
+  "12 boiled eggs → 2 breakfasts + 5 snacks + 2 dinner toppings",
+  "1 kg cooked beef mince → 3 days of boys' lunches + Tue keema dinner",
+  "4 frozen burger patties → Wed boys' lunch done",
+  "2 pots of dal pressure cooked → Mon–Thu dinners on reheat",
+  "2 kg chicken marinated → Wed lunch + Fri tikka",
+  "All veg chopped → saves 5–8 min per meal every day",
+  "14 portion nut bags (7 per boy) → zero morning lunchbox effort",
+];
+
+// ───────────────────────────────────────────────────────────────────
+// 3 Shopping Cadences
+// ───────────────────────────────────────────────────────────────────
+const SHOPPING = {
+  weekly: {
+    title: "Weekly Fresh Run",
+    when: "Every Sunday morning · or Friday after work",
+    where: "Safeway / local produce store + Costco for rotisserie chicken",
+    estCost: "CAD $35–45",
+    rationale: "Fresh, fast-turnover items only. Produce stays crisp, bread stays fresh, the one rotisserie chicken anchors 3 meals.",
+    sections: [
+      { cat: "Fresh Produce", items: [
+        "Baby spinach + mixed greens (1 large bag)",
+        "Cucumbers × 4",
+        "Tomatoes × 6",
+        "Zucchini × 2",
+        "Bell peppers × 3 (mixed colours)",
+        "Mushrooms (1 punnet)",
+        "Broccoli × 1 head",
+        "Bananas × 8 (boys' lunchboxes + Wed snack)",
+        "Apples × 6 (lunchboxes + snacks)",
+        "Lemons × 4",
+        "Fresh ginger thumb + garlic bulb",
+        "Coriander + green chilli (small bunches)",
+      ]},
+      { cat: "Bread + Refrigerated", items: [
+        "Kirkland Rotisserie Chicken × 1 (the MVP — Mon + Wed lunches)",
+        "WW tortillas if running low (boys' wraps)",
+        "Sourdough loaf — optional weekend treat (Cobs or Costco)",
+      ]},
+      { cat: "Quick Top-ups", items: [
+        "Oikos Triple Zero cup × 2 (Tue + Thu emergency)",
+        "Milk (1 jug if running low)",
+      ]},
+    ],
+  },
+  midweek: {
+    title: "Mid-Week Top-Up",
+    when: "Wednesday evening · 15-min stop",
+    where: "Nearest Safeway or corner store",
+    estCost: "CAD $15–25",
+    rationale: "Boys eat fruit fast. Bread runs out. This is the small refill that prevents Thu/Fri grocery-stress.",
+    sections: [
+      { cat: "Produce Refill", items: [
+        "Bananas × 4 more (boys go through these fast)",
+        "Apples × 3 more",
+        "Spinach or salad greens (small bag — replenish if used)",
+        "Cucumber × 2 more",
+        "1 fresh lemon if you've used them",
+      ]},
+      { cat: "Bread + Dairy", items: [
+        "Whole wheat bread loaf (boys' toast)",
+        "1 dozen eggs if Sunday's are gone",
+        "Greek yogurt cup × 2 (Thu + Fri snack backup)",
+        "Cheese slices if boys' lunch supply is low",
+      ]},
+      { cat: "Optional", items: [
+        "Coriander (refresh if Tue dal used it)",
+        "Avocado × 2 (if boys' Thu/Fri breakfast needs variety)",
+      ]},
+    ],
+  },
+  monthly: {
+    title: "Monthly Costco Run",
+    when: "First weekend of every month · 90 min trip",
+    where: "Costco Canada (North Vancouver / Burnaby)",
+    estCost: "CAD $220–280",
+    rationale: "Bulk + frozen + pantry. One trip stocks 3–4 weeks. Freeze proteins on arrival. Amy's 12-pack is your floor — 12 emergency dinners.",
+    sections: [
+      { cat: "Frozen Proteins (the engine)", items: [
+        "Kirkland Extra Lean Ground Beef 3 kg (boys + Tue keema)",
+        "Kirkland Frozen Chicken Breasts 2 kg (lunches + dinners)",
+        "Kirkland Frozen Atlantic Salmon Fillets (your Tue + Thu lunches)",
+        "Kirkland Frozen Cooked Prawns (large bag — Wed dinner + Sun lunch)",
+        "Kirkland Beef Meatballs frozen (backup for Tue dinner if no time to cook keema)",
+      ]},
+      { cat: "Refrigerated Bulk", items: [
+        "Kirkland Smoked Atlantic Salmon (Thu + Sun breakfast)",
+        "Kirkland Cottage Cheese (large tub)",
+        "Oikos Greek Yogurt Plain 0% multi-pack",
+        "Kirkland Hard Boiled Eggs 2-pack box (emergency backup)",
+        "Kirkland Marble Cheddar block (1.8 kg — grate as needed)",
+        "Kirkland Shredded Mozzarella (boys' burger night)",
+        "Kirkland Eggs 18-pack × 2",
+        "Kirkland Deli Roast Beef (boys' optional rotation)",
+      ]},
+      { cat: "Soups + Broths (your floor)", items: [
+        "Pacific Foods Organic Chicken Bone Broth 6-pack",
+        "Pacific Foods Organic Chicken Broth 6-pack",
+        "Amy's Organic Lentil Soup 12-pack ⭐ (your Fri Mounjaro dinner + 12 emergency meals)",
+      ]},
+      { cat: "Pantry Long-Shelf", items: [
+        "Sella basmati rice 4 kg",
+        "Masur dal 2 kg",
+        "Chana dal 2 kg",
+        "Moong dal 1 kg",
+        "Whole wheat atta flour 5 kg (husband's roti)",
+        "Kirkland Extra Virgin Olive Oil",
+        "Ghee jar (large)",
+        "Low-sodium soy sauce",
+        "Kirkland taco/curry spice blend",
+        "Pink Himalayan salt",
+      ]},
+      { cat: "Snacks + Lunchbox Engine", items: [
+        "Kirkland Mixed Nuts unsalted (boys × 7 bags/wk × 4 wk)",
+        "Kirkland Raw Almonds",
+        "Kirkland Almond Butter (your Fri yogurt)",
+        "Kirkland Pumpkin Seeds (your Thu snack)",
+        "Whole wheat tortillas (Kirkland — boys' wraps)",
+        "WW burger buns (boys' Wed lunch)",
+        "Trail mix bag",
+        "Mini dark chocolate chips + rolled oats + honey (for PB energy balls — boys' snack station)",
+        "Natural peanut butter jar",
+      ]},
+      { cat: "Supplements + Health", items: [
+        "Kirkland Vitamin D3 (ask doctor about dose)",
+        "Kirkland Magnesium Glycinate (your Thu pumpkin seed top-up)",
+        "Synthroid refill check — pharmacy",
+        "Metformin refill check — pharmacy",
+        "Mounjaro pen supply — verify",
+      ]},
+    ],
+  },
+};
+
+// ───────────────────────────────────────────────────────────────────
+// Emergency / Busy Day Meals — per person
+// ───────────────────────────────────────────────────────────────────
+const EMERGENCY = {
+  wife: [
+    { type: "B", meal: "2 Kirkland hard-boiled eggs + Oikos Triple Zero cup", time: "0 min", p: "26 g" },
+    { type: "B", meal: "Kirkland smoked salmon + 1 boiled egg + cucumber", time: "0 min", p: "24 g" },
+    { type: "L", meal: "Costco rotisserie chicken 150 g + Amy's lentil soup + ½ c rice", time: "5 min", p: "42 g" },
+    { type: "L", meal: "Kirkland canned salmon + pre-cooked rice pouch + any veg", time: "5 min", p: "35 g" },
+    { type: "S", meal: "2 boiled eggs + small handful nuts", time: "0 min", p: "14 g" },
+    { type: "S", meal: "Oikos Triple Zero cup", time: "0 min", p: "15 g" },
+    { type: "D", meal: "Amy's Lentil Soup + 1 egg stirred in", time: "5 min", p: "20 g" },
+    { type: "D", meal: "Pacific bone broth + shredded rotisserie chicken + spinach", time: "8 min", p: "28 g" },
+    { type: "D", meal: "Bone broth + 2 whisked eggs + lemon (Thu signature)", time: "8 min", p: "22 g" },
+  ],
+  husband: [
+    { type: "B", meal: "3 boiled eggs + 1 WW roti + yogurt", time: "3 min", p: "30 g" },
+    { type: "B", meal: "Greek yogurt + nuts + 2 eggs", time: "0 min", p: "26 g" },
+    { type: "L", meal: "Rotisserie chicken 200 g + 1 roti + Amy's dal soup", time: "5 min", p: "50 g" },
+    { type: "S", meal: "Cottage cheese + cucumber + apple", time: "0 min", p: "14 g" },
+    { type: "D", meal: "Pacific broth + chicken + spinach + 2 roti (heat broth, shred chicken in)", time: "10 min", p: "36 g" },
+    { type: "D", meal: "Dal reheat + 1 egg + 2 roti", time: "5 min", p: "28 g" },
+  ],
+  boys: [
+    { type: "B", meal: "Yogurt + 2 boiled eggs + WW toast + nuts each", time: "3 min", p: "38 g" },
+    { type: "B", meal: "Beef wrap from Sunday batch + 1 egg", time: "5 min", p: "35 g" },
+    { type: "L_school", meal: "PB & honey on sourdough + cheese stick + apple + nuts (zero-cook backup lunchbox)", time: "3 min", p: "22 g" },
+    { type: "L_school", meal: "Deli roast beef + WW tortilla + cheese + carrots + banana", time: "2 min", p: "32 g" },
+    { type: "S", meal: "PB energy balls × 2 + apple + string cheese", time: "0 min (pre-made)", p: "20 g" },
+    { type: "D", meal: "Pre-cooked beef mince + rice + dal reheat", time: "8 min", p: "48 g" },
+    { type: "D", meal: "Beef meatballs (frozen Kirkland) + jarred marinara + rice", time: "12 min", p: "44 g" },
+  ],
+};
+
+// ───────────────────────────────────────────────────────────────────
+// Tabs
+// ───────────────────────────────────────────────────────────────────
+const TABS = [
+  { id: "today",    label: "Today" },
+  { id: "week",     label: "Week" },
+  { id: "lunchbox", label: "School Lunches" },
+  { id: "shopping", label: "Shopping" },
+  { id: "batch",    label: "Sunday Batch" },
+  { id: "rescue",   label: "Emergency" },
+  { id: "family",   label: "Family Profiles" },
+];
+
+const SHOP_TABS = [
+  { id: "weekly",  label: "Weekly", color: "#2d6a4f" },
+  { id: "midweek", label: "Mid-Week", color: "#c9500a" },
+  { id: "monthly", label: "Monthly", color: "#cc0000" },
+];
+
+// Day-of-week for "Today" auto-select
+const todayIdx = () => {
+  const d = new Date().getDay();    // Sun=0, Mon=1, ..., Sat=6
+  return d === 0 ? 6 : d - 1;       // Map Mon=0 ... Sun=6
+};
+
+// ════════════════════════════════════════════════════════════════════
+// Component
+// ════════════════════════════════════════════════════════════════════
+function FamilyKitchenOS() {
+  const [tab, setTab] = useState("today");
+  const [dayIdx, setDayIdx] = useState(todayIdx());
+  const [shopTab, setShopTab] = useState("weekly");
+  const [checked, setChecked] = useState({});
+  const [openCat, setOpenCat] = useState({});
+
+  // Persist shopping checks across sessions
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem("kitchen-checks");
+      if (v) setChecked(JSON.parse(v));
+    } catch (e) { /* first run */ }
+  }, []);
+
+  useEffect(() => {
+    if (Object.keys(checked).length === 0) return;
+    try { localStorage.setItem("kitchen-checks", JSON.stringify(checked)); }
+    catch (e) { /* ignore */ }
+  }, [checked]);
+
+  const toggleCheck = (k) => setChecked(p => ({ ...p, [k]: !p[k] }));
+  const toggleCat   = (k) => setOpenCat(p => ({ ...p, [k]: !p[k] }));
+  const resetWeekChecks = () => {
+    const next = { ...checked };
+    Object.keys(next).forEach(k => { if (k.startsWith(shopTab + "-")) delete next[k]; });
+    setChecked(next);
+  };
+
+  const d = WEEK[dayIdx];
+
+  // ─────────────────────────────────────────────────────────────
+  // Sub-components
+  // ─────────────────────────────────────────────────────────────
+  const Pill = ({ children, bg, fg }) => (
+    <span style={{ background: bg, color: fg, fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 100, letterSpacing: 0.5 }}>{children}</span>
+  );
+
+  const PersonRow = ({ who, data }) => {
+    if (!data?.meal) return null;
+    const c = COLORS[who];
+    return (
+      <div style={{ display: "flex", gap: 10, padding: "10px 14px", borderBottom: "1px solid #f4f4f4", alignItems: "flex-start" }}>
+        <div style={{ width: 38, minHeight: 38, borderRadius: 8, background: c.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: c.fg, fontFamily: "sans-serif", letterSpacing: "-0.3px" }}>{c.tag}</span>
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 600, color: "#222", lineHeight: 1.35 }}>{data.meal}</div>
+          {data.detail && (
+            <div style={{ fontFamily: "sans-serif", fontSize: 11, color: "#777", marginTop: 3, lineHeight: 1.45 }}
+                 dangerouslySetInnerHTML={{ __html: data.detail.replace(/\*\*(.+?)\*\*/g, '<b style="color:#cc0000">$1</b>') }} />
+          )}
+        </div>
+        <div style={{ textAlign: "right", flexShrink: 0, paddingLeft: 4 }}>
+          <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: c.fg }}>{data.p}g</div>
+          <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#bbb" }}>{data.cal} cal</div>
+        </div>
+      </div>
+    );
+  };
+
+  const MealCard = ({ label, sub, accent, cookNote, children }) => (
+    <div style={{ background: "white", borderRadius: 12, marginBottom: 12, overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.07)", borderTop: `3px solid ${accent}` }}>
+      <div style={{ padding: "10px 14px", background: "#fafaf7", borderBottom: "1px solid #f0f0f0" }}>
+        <span style={{ fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, color: "#aaa", letterSpacing: 1.2 }}>{label}</span>
+        {sub && <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 600, color: "#333", marginTop: 2 }}>{sub}</div>}
+        {cookNote && <div style={{ fontFamily: "sans-serif", fontSize: 11, color: accent, marginTop: 4, opacity: 0.9, lineHeight: 1.45 }}>🍳 {cookNote}</div>}
+      </div>
+      {children}
+    </div>
+  );
+
+  const accents = { breakfast: "#f4a261", lunch: "#2d6a4f", snack: "#7c3aed", dinner: "#1d3557", packed: "#c45000" };
+
+  // ─────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────
+  return (
+    <div style={{ fontFamily: "'Georgia', serif", minHeight: "100vh", background: "#faf7f2", paddingBottom: 32 }}>
+
+      {/* Header */}
+      <div style={{ background: "linear-gradient(135deg, #1a3309 0%, #2d5016 50%, #4a7c2f 100%)", padding: "22px 20px 18px", color: "white" }}>
+        <div style={{ fontFamily: "sans-serif", fontSize: 10, letterSpacing: 3, opacity: 0.7, marginBottom: 4 }}>FAMILY KITCHEN OS</div>
+        <h1 style={{ fontSize: 22, margin: "0 0 4px", lineHeight: 1.2, fontWeight: 700 }}>One kitchen, four plates</h1>
+        <p style={{ fontSize: 12, opacity: 0.78, margin: 0, fontFamily: "sans-serif", lineHeight: 1.5 }}>
+          Week 1 plan locked for you · Husband adapts · Boys diverge where needed · Cooking effort minimised
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <div style={{ background: "#0f1f06", overflowX: "auto", display: "flex", whiteSpace: "nowrap" }}>
+        {TABS.map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{
+              padding: "12px 16px", border: "none", cursor: "pointer", flexShrink: 0,
+              fontFamily: "sans-serif", fontSize: 12, fontWeight: 600, letterSpacing: 0.5,
+              background: tab === t.id ? "#faf7f2" : "transparent",
+              color: tab === t.id ? "#2d5016" : "rgba(255,255,255,0.65)",
+              transition: "all 0.18s",
+            }}>
+            {t.label}
+          </button>
+        ))}
+      </div>
+
+      <div style={{ padding: "16px 14px", maxWidth: 720, margin: "0 auto" }}>
+
+        {/* ───────────── TODAY / WEEK ───────────── */}
+        {(tab === "today" || tab === "week") && (
+          <>
+            {/* Day picker (only on Week tab) */}
+            {tab === "week" && (
+              <div style={{ display: "flex", gap: 4, overflowX: "auto", marginBottom: 14, paddingBottom: 6 }}>
+                {WEEK.map((dd, i) => (
+                  <button key={dd.tag} onClick={() => setDayIdx(i)}
+                    style={{
+                      padding: "8px 12px", border: "none", borderRadius: 8, cursor: "pointer",
+                      fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+                      background: dayIdx === i ? "#2d5016" : "white",
+                      color: dayIdx === i ? "white" : "#666",
+                      flexShrink: 0,
+                      boxShadow: dayIdx === i ? "0 2px 6px rgba(45,80,22,0.25)" : "0 1px 3px rgba(0,0,0,0.05)",
+                    }}>
+                    {dd.tag}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Day Header */}
+            <div style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14, boxShadow: "0 1px 6px rgba(0,0,0,0.07)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: 6 }}>
+                <h2 style={{ margin: 0, fontSize: 20, color: "#1a3309" }}>{d.day}</h2>
+                <span style={{ fontFamily: "sans-serif", fontSize: 11, color: "#777" }}>{d.effort}</span>
+              </div>
+              <p style={{ margin: "8px 0 0", fontFamily: "sans-serif", fontSize: 12, color: "#555", lineHeight: 1.5 }}>
+                <b style={{ color: "#1a3309" }}>Cook strategy:</b> {d.cookStrategy}
+              </p>
+            </div>
+
+            {/* Breakfast */}
+            <MealCard label="BREAKFAST" sub="7:30 – 8:30 AM" accent={accents.breakfast}>
+              <PersonRow who="wife"    data={d.breakfast.wife} />
+              <PersonRow who="husband" data={d.breakfast.husband} />
+              <PersonRow who="boys"    data={d.breakfast.boys} />
+            </MealCard>
+
+            {/* Lunch */}
+            <MealCard label="LUNCH" sub="12:30 – 2:00 PM" accent={accents.lunch}>
+              <PersonRow who="wife"    data={d.lunch.wife} />
+              <PersonRow who="husband" data={d.lunch.husband} />
+              {d.lunch.boysSchool === false && d.lunch.boys && <PersonRow who="boys" data={d.lunch.boys} />}
+              {d.lunch.boysSchool === true && (
+                <div style={{ padding: "10px 14px", background: "#fffaf0", borderTop: "1px solid #f4f4f4", display: "flex", gap: 10 }}>
+                  <div style={{ width: 38, height: 38, borderRadius: 8, background: COLORS.boys.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.boys.fg }}>BOYS</span>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 12, color: COLORS.boys.fg, fontWeight: 700, letterSpacing: 0.5 }}>📦 PACKED LUNCH AT SCHOOL</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, color: "#888", marginTop: 2 }}>See School Lunches tab → {d.day}</div>
+                  </div>
+                </div>
+              )}
+            </MealCard>
+
+            {/* 4 PM Snack */}
+            <MealCard label="4 PM SNACK" sub="Phone alarm — do not skip" accent={accents.snack}>
+              <PersonRow who="wife"    data={d.snack.wife} />
+              <PersonRow who="husband" data={d.snack.husband} />
+              <PersonRow who="boys"    data={d.snack.boys} />
+            </MealCard>
+
+            {/* Dinner */}
+            <MealCard label="DINNER" sub="7:00 – 8:00 PM" accent={accents.dinner}>
+              <PersonRow who="wife"    data={d.dinner.wife} />
+              <PersonRow who="husband" data={d.dinner.husband} />
+              <PersonRow who="boys"    data={d.dinner.boys} />
+            </MealCard>
+
+            {/* Day totals */}
+            <div style={{ background: "linear-gradient(135deg, #1a3309 0%, #2d5016 100%)", borderRadius: 12, padding: "14px 16px", color: "white", marginTop: 10 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.55, letterSpacing: 1.2, marginBottom: 6 }}>DAY TOTALS</div>
+              {(() => {
+                const sum = (who) => {
+                  const sm = d.snack[who]?.p ?? 0;
+                  const bf = d.breakfast[who]?.p ?? 0;
+                  const ln = (d.lunch.boysSchool && who === "boys") ? (d.boysSchool?.p ?? 0) : (d.lunch[who]?.p ?? 0);
+                  const lncal = (d.lunch.boysSchool && who === "boys") ? (d.boysSchool?.cal ?? 0) : (d.lunch[who]?.cal ?? 0);
+                  const sc = d.snack[who]?.cal ?? 0;
+                  const bc = d.breakfast[who]?.cal ?? 0;
+                  const dn = d.dinner[who]?.p ?? 0;
+                  const dnc = d.dinner[who]?.cal ?? 0;
+                  return { p: bf + ln + sm + dn, c: bc + lncal + sc + dnc };
+                };
+                const sw = sum("wife"), sh = sum("husband"), sb = sum("boys");
+                const Row = ({ who, t }) => {
+                  const c = COLORS[who];
+                  return (
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0" }}>
+                      <span style={{ fontFamily: "sans-serif", fontSize: 12, fontWeight: 600, color: c.bg }}>{c.tag}</span>
+                      <span style={{ fontFamily: "sans-serif", fontSize: 12, opacity: 0.9 }}>
+                        <b style={{ color: c.bg }}>{t.p}g</b> protein · {t.c} cal
+                      </span>
+                    </div>
+                  );
+                };
+                return <>
+                  <Row who="wife" t={sw} />
+                  <Row who="husband" t={sh} />
+                  <Row who="boys" t={sb} />
+                </>;
+              })()}
+            </div>
+          </>
+        )}
+
+        {/* ───────────── SCHOOL LUNCHES ───────────── */}
+        {tab === "lunchbox" && (
+          <div>
+            <div style={{ background: COLORS.boys.fg, color: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.65, letterSpacing: 1.2 }}>BOYS · MIDDLE SCHOOL</div>
+              <h2 style={{ margin: "4px 0 6px", fontSize: 18 }}>5 packed lunches · Mon–Fri</h2>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
+                All assemble in &lt;5 min. Beef + chicken + cheese + fruit + nuts. No fish. Sunday batch makes this almost zero-effort.
+              </p>
+            </div>
+            {WEEK.filter(w => w.boysSchool && (w.tag !== "SAT" && w.tag !== "SUN")).map((w, i) => (
+              <div key={w.tag} style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)", borderLeft: `4px solid ${COLORS.boys.fg}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, color: "#222" }}>{w.day} · {w.boysSchool.name}</h3>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: COLORS.boys.fg }}>{w.boysSchool.p}g</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#aaa" }}>{w.boysSchool.cal} cal</div>
+                  </div>
+                </div>
+                <ul style={{ margin: 0, paddingLeft: 18 }}>
+                  {w.boysSchool.items.map((it, j) => (
+                    <li key={j} style={{ fontFamily: "sans-serif", fontSize: 12, color: "#555", lineHeight: 1.6 }}>{it}</li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: 8, padding: "8px 10px", background: COLORS.boys.bg, borderRadius: 8 }}>
+                  <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 11, color: COLORS.boys.fg, lineHeight: 1.5 }}>💡 {w.boysSchool.tip}</p>
+                </div>
+              </div>
+            ))}
+
+            {/* Snack station */}
+            <div style={{ background: "#fff8e6", border: "1px solid #f4cd6b", borderRadius: 12, padding: "14px 16px", marginTop: 10 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#a06800", letterSpacing: 1, marginBottom: 6 }}>📦 THE SNACK STATION (kitchen counter)</div>
+              <p style={{ margin: "0 0 8px", fontFamily: "sans-serif", fontSize: 12, color: "#6b4500", lineHeight: 1.55 }}>
+                Pre-portioned bags in a basket so boys self-pack the night before. Builds independence, zero effort from you.
+              </p>
+              <ul style={{ margin: 0, paddingLeft: 18 }}>
+                {["7 × 30 g nut bags (Sunday batch)", "PB energy balls in labelled fridge container", "String cheese on fridge door", "Fruit bowl: apples + bananas + oranges", "Greek yogurt cups (lower shelf)"].map((it, i) => (
+                  <li key={i} style={{ fontFamily: "sans-serif", fontSize: 12, color: "#6b4500", lineHeight: 1.6 }}>{it}</li>
+                ))}
+              </ul>
+            </div>
+
+            {/* PB Energy Balls recipe */}
+            <div style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginTop: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)" }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#2d6a4f", letterSpacing: 1, marginBottom: 6 }}>⭐ PB ENERGY BALLS — protein bar replacement</div>
+              <p style={{ margin: "0 0 8px", fontFamily: "sans-serif", fontSize: 12, color: "#555", lineHeight: 1.55 }}>10 min Sunday. Makes ~20 balls. Keeps 1 week in fridge.</p>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+                <div>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 4 }}>INGREDIENTS</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontFamily: "sans-serif", fontSize: 11, color: "#555", lineHeight: 1.7 }}>
+                    <li>1½ c rolled oats</li><li>½ c natural PB</li><li>3 tbsp honey</li>
+                    <li>2 tbsp mini dark choc chips</li><li>1 tbsp chia (optional)</li><li>Pinch salt</li>
+                  </ul>
+                </div>
+                <div>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#888", marginBottom: 4 }}>METHOD</div>
+                  <ul style={{ margin: 0, paddingLeft: 16, fontFamily: "sans-serif", fontSize: 11, color: "#555", lineHeight: 1.7 }}>
+                    <li>Mix everything in a bowl</li><li>Chill 20 min</li>
+                    <li>Roll into golf-ball sized balls</li><li>Store in airtight container in fridge</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ───────────── SHOPPING ───────────── */}
+        {tab === "shopping" && (
+          <div>
+            {/* Cadence selector */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {SHOP_TABS.map(s => (
+                <button key={s.id} onClick={() => setShopTab(s.id)}
+                  style={{
+                    flex: 1, padding: "10px 8px", border: "none", borderRadius: 10, cursor: "pointer",
+                    fontFamily: "sans-serif", fontSize: 12, fontWeight: 700, letterSpacing: 0.5,
+                    background: shopTab === s.id ? s.color : "white",
+                    color: shopTab === s.id ? "white" : "#555",
+                    boxShadow: shopTab === s.id ? `0 2px 8px ${s.color}40` : "0 1px 3px rgba(0,0,0,0.06)",
+                    transition: "all 0.2s",
+                  }}>
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const S = SHOPPING[shopTab];
+              const colorMap = { weekly: "#2d6a4f", midweek: "#c9500a", monthly: "#cc0000" };
+              const color = colorMap[shopTab];
+              return (
+                <>
+                  <div style={{ background: color, color: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
+                      <h2 style={{ margin: 0, fontSize: 18 }}>{S.title}</h2>
+                      <span style={{ fontFamily: "sans-serif", fontSize: 14, fontWeight: 700, opacity: 0.9 }}>{S.estCost}</span>
+                    </div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, opacity: 0.85, marginTop: 5, lineHeight: 1.5 }}>
+                      <b>When:</b> {S.when}<br />
+                      <b>Where:</b> {S.where}
+                    </div>
+                    <div style={{ marginTop: 8, padding: "8px 10px", background: "rgba(255,255,255,0.12)", borderRadius: 8, fontFamily: "sans-serif", fontSize: 11, opacity: 0.9, lineHeight: 1.5 }}>
+                      {S.rationale}
+                    </div>
+                  </div>
+
+                  {S.sections.map((sec, si) => {
+                    const catKey = `${shopTab}-${si}`;
+                    const isOpen = openCat[catKey] !== false;  // default open
+                    return (
+                      <div key={si} style={{ background: "white", borderRadius: 10, marginBottom: 8, overflow: "hidden", boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}>
+                        <button onClick={() => toggleCat(catKey)} style={{ width: "100%", padding: "11px 14px", background: "#fafafa", border: "none", cursor: "pointer", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <span style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color, letterSpacing: 0.8 }}>{sec.cat.toUpperCase()}</span>
+                          <span style={{ color, fontSize: 14 }}>{isOpen ? "▲" : "▼"}</span>
+                        </button>
+                        {isOpen && sec.items.map((item, ii) => {
+                          const key = `${catKey}-${ii}`;
+                          const done = checked[key];
+                          return (
+                            <div key={ii} onClick={() => toggleCheck(key)}
+                              style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderTop: "1px solid #f5f5f5", cursor: "pointer", opacity: done ? 0.4 : 1, transition: "opacity 0.2s" }}>
+                              <div style={{ width: 18, height: 18, border: `2px solid ${done ? color : "#ddd"}`, borderRadius: 4, flexShrink: 0, background: done ? color : "white", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                                {done && <span style={{ color: "white", fontSize: 11, lineHeight: 1 }}>✓</span>}
+                              </div>
+                              <span style={{ fontFamily: "sans-serif", fontSize: 13, color: "#333", textDecoration: done ? "line-through" : "none", lineHeight: 1.4 }}>{item}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+
+                  <button onClick={resetWeekChecks}
+                    style={{ marginTop: 12, padding: "10px 14px", background: "white", border: `1px solid ${color}`, borderRadius: 8, color, fontFamily: "sans-serif", fontSize: 12, fontWeight: 600, cursor: "pointer", width: "100%" }}>
+                    Reset this list
+                  </button>
+
+                  <div style={{ marginTop: 14, padding: "12px 14px", background: "#f0fff4", border: "1px solid #9ae6b4", borderRadius: 10 }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#276749", marginBottom: 4, letterSpacing: 0.5 }}>💡 RHYTHM</div>
+                    <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#2f855a", lineHeight: 1.55 }}>
+                      Annualised: weekly fresh ~$40/wk + mid-week ~$20/wk + monthly ($240÷4) ~$60/wk = <b>~$120/week amortised</b>. Well under your $250 weekly ceiling.
+                    </p>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* ───────────── SUNDAY BATCH ───────────── */}
+        {tab === "batch" && (
+          <div>
+            <div style={{ background: "#e63946", color: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.75, letterSpacing: 1.2 }}>EVERY SUNDAY · 4:00 – 5:30 PM</div>
+              <h2 style={{ margin: "4px 0 5px", fontSize: 18 }}>The 90-Min Family Reset</h2>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
+                One session runs the entire week. Skip it and every morning is hard.
+              </p>
+            </div>
+
+            {SUNDAY_BATCH.map((t, i) => (
+              <div key={i} style={{ background: "white", borderRadius: 10, padding: "13px 14px", marginBottom: 9, display: "flex", gap: 12, alignItems: "flex-start", boxShadow: "0 1px 5px rgba(0,0,0,0.06)" }}>
+                <div style={{ background: "#fff0f0", borderRadius: 8, padding: "6px 10px", textAlign: "center", flexShrink: 0, minWidth: 44 }}>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 17, fontWeight: 700, color: "#e63946", lineHeight: 1 }}>{t.mins}</div>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 8, color: "#e63946", letterSpacing: 0.5 }}>MIN</div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 600, color: "#222", marginBottom: 3 }}>{t.task}</div>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 11, color: "#888", lineHeight: 1.45 }}>Covers: {t.covers}</div>
+                </div>
+              </div>
+            ))}
+
+            <div style={{ background: "#f0fff4", border: "1px solid #9ae6b4", borderRadius: 12, padding: "14px 16px", marginTop: 8 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#276749", marginBottom: 8, letterSpacing: 0.5 }}>WHAT COMES OUT OF SUNDAY</div>
+              {BATCH_OUTPUTS.map((it, i) => (
+                <div key={i} style={{ display: "flex", gap: 7, marginBottom: 6 }}>
+                  <span style={{ color: "#38a169", flexShrink: 0, fontWeight: 700 }}>✓</span>
+                  <span style={{ fontFamily: "sans-serif", fontSize: 12, color: "#2f855a", lineHeight: 1.45 }}>{it}</span>
+                </div>
+              ))}
+            </div>
+
+            <div style={{ background: "#1b2838", borderRadius: 12, padding: "14px 16px", marginTop: 12, color: "white" }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.45, marginBottom: 6, letterSpacing: 1.2 }}>THE SYSTEM IN ONE SENTENCE</div>
+              <div style={{ fontFamily: "sans-serif", fontSize: 13, opacity: 0.88, lineHeight: 1.7 }}>
+                Saturday's chicken soup batch covers Mon dinner. Sunday's 90-min batch covers Tue–Fri ingredients. You only actively cook 5 nights — and even those are 1 or 2 tracks max.
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ───────────── EMERGENCY ───────────── */}
+        {tab === "rescue" && (
+          <div>
+            <div style={{ background: "#1a3309", color: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.65, letterSpacing: 1.2 }}>WHEN THE WHEELS COME OFF</div>
+              <h2 style={{ margin: "4px 0 5px", fontSize: 18 }}>Emergency Meals · 0–12 min</h2>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, opacity: 0.78, lineHeight: 1.5 }}>
+                One list per person. All from Costco or Safeway. The floor — never miss protein, never skip a meal.
+              </p>
+            </div>
+
+            {["wife", "husband", "boys"].map(who => {
+              const c = COLORS[who];
+              const meals = EMERGENCY[who];
+              return (
+                <div key={who} style={{ marginBottom: 16 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                    <div style={{ background: c.bg, color: c.fg, padding: "4px 10px", borderRadius: 6, fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 0.5 }}>{c.tag}</div>
+                    <div style={{ flex: 1, height: 1, background: c.bg }} />
+                  </div>
+                  {["B", "L", "L_school", "S", "D"].map(type => {
+                    const typed = meals.filter(m => m.type === type);
+                    if (typed.length === 0) return null;
+                    const labels = { B: "BREAKFAST", L: "LUNCH", L_school: "SCHOOL LUNCH", S: "SNACK", D: "DINNER" };
+                    return (
+                      <div key={type}>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, color: "#aaa", letterSpacing: 1, margin: "8px 0 4px" }}>{labels[type]}</div>
+                        {typed.map((m, i) => (
+                          <div key={i} style={{ background: "white", borderRadius: 8, padding: "10px 14px", marginBottom: 5, display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, boxShadow: "0 1px 3px rgba(0,0,0,0.05)" }}>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontFamily: "sans-serif", fontSize: 12, color: "#333", lineHeight: 1.45 }}>{m.meal}</div>
+                              <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#999", marginTop: 2 }}>⏱ {m.time}</div>
+                            </div>
+                            <div style={{ textAlign: "right", flexShrink: 0 }}>
+                              <div style={{ fontFamily: "sans-serif", fontSize: 12, fontWeight: 700, color: c.fg }}>{m.p}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })}
+
+            <div style={{ background: "#e8f5e9", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#1b5e20", lineHeight: 1.55 }}>
+                <b>The floor rule:</b> On the absolute worst day — drink your water, eat 2 boiled eggs, have Amy's lentil soup. That's it. That's enough. Never let perfect be the enemy of the floor.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* ───────────── FAMILY PROFILES ───────────── */}
+        {tab === "family" && (
+          <div>
+            <div style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14, boxShadow: "0 1px 5px rgba(0,0,0,0.07)" }}>
+              <h2 style={{ margin: "0 0 4px", fontSize: 18, color: "#1a3309" }}>The 4 plates</h2>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#666", lineHeight: 1.5 }}>
+                Different bodies, different goals, one kitchen. Each card shows the calculated needs and the non-negotiable rules.
+              </p>
+            </div>
+
+            {FAMILY.map(p => {
+              const c = COLORS[p.id];
+              return (
+                <div key={p.id} style={{ background: "white", borderRadius: 12, marginBottom: 12, overflow: "hidden", boxShadow: "0 1px 6px rgba(0,0,0,0.07)", borderLeft: `4px solid ${c.fg}` }}>
+                  <div style={{ padding: "14px 16px", background: c.bg }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10 }}>
+                      <div>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 10, color: c.fg, fontWeight: 700, letterSpacing: 1 }}>{c.tag}</div>
+                        <h3 style={{ margin: "2px 0", fontSize: 18, color: c.fg }}>{p.emoji} {p.name}</h3>
+                      </div>
+                      <div style={{ textAlign: "right", fontFamily: "sans-serif", fontSize: 11, color: c.fg, opacity: 0.85, lineHeight: 1.4 }}>
+                        {p.age} · {p.weight} · {p.height}
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, color: c.fg, opacity: 0.85, marginTop: 6, lineHeight: 1.45 }}>{p.conditions}</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, color: c.fg, marginTop: 4, fontWeight: 600 }}>🎯 {p.goal}</div>
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: "#f0f0f0" }}>
+                    {[
+                      { label: "BMR", v: p.bmr },
+                      { label: "TDEE", v: p.tdee },
+                      { label: "TARGET", v: p.target },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: "white", padding: "10px 8px", textAlign: "center" }}>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 9, color: "#999", letterSpacing: 1 }}>{m.label}</div>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 17, fontWeight: 700, color: c.fg, marginTop: 2 }}>{m.v}</div>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 9, color: "#aaa" }}>cal</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 1, background: "#f0f0f0" }}>
+                    {[
+                      { label: "PROTEIN", v: p.protein, unit: "g" },
+                      { label: "CARBS", v: p.carbs, unit: "g" },
+                      { label: "FAT", v: p.fat, unit: "g" },
+                    ].map((m, i) => (
+                      <div key={i} style={{ background: "white", padding: "10px 8px", textAlign: "center" }}>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 9, color: "#999", letterSpacing: 1 }}>{m.label}</div>
+                        <div style={{ fontFamily: "sans-serif", fontSize: 16, fontWeight: 700, color: c.fg, marginTop: 2 }}>{m.v}{m.unit}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div style={{ padding: "12px 16px", background: "#fafaf7" }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, color: "#999", letterSpacing: 1, marginBottom: 6 }}>RULES</div>
+                    {p.rules.map((r, j) => (
+                      <div key={j} style={{ display: "flex", gap: 7, marginBottom: 4 }}>
+                        <span style={{ color: c.fg, flexShrink: 0 }}>·</span>
+                        <span style={{ fontFamily: "sans-serif", fontSize: 12, color: "#444", lineHeight: 1.5 }}>{r}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div style={{ background: "#fff3cd", border: "1px solid #f0c060", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#664d03", lineHeight: 1.55 }}>
+                <b>⚕️ Medical disclaimer:</b> These are the targets from your existing plan. Any changes to medication timing or dosing must be confirmed with the prescribing physician.
+              </p>
+            </div>
+          </div>
+        )}
+
+      </div>
+
+      <div style={{ textAlign: "center", padding: "14px 12px", fontFamily: "sans-serif", fontSize: 10, color: "#bbb", lineHeight: 1.6 }}>
+        Family of 4 · Vancouver BC · Costco + Safeway · Week 1 plan locked · v1
+      </div>
+    </div>
+  );
+}
+
+
+ReactDOM.createRoot(document.getElementById("root")).render(<FamilyKitchenOS />);
+  </script>
+</body>
+</html>
