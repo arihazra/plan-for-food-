@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#1a3309" />
   <title>Family Kitchen OS</title>
   <!--
-    Family Kitchen OS — unified meal + shopping system for a family of 4.
-    Wife's Week 1 plan locked. Husband + boys adapt. Three shopping cadences.
+    Family Kitchen OS v2 — unified meal + shopping system for a family of 4.
+    Maddie + Ari alternate Week A/B. Kids run 4 anchor bowls. Three shopping cadences.
     Standalone HTML. Open directly in any modern browser. No build step.
     Storage uses localStorage (per-browser, per-device).
   -->
@@ -37,236 +37,214 @@ const { useState, useEffect } = React;
 // ════════════════════════════════════════════════════════════════════
 
 const COLORS = {
-  wife:    { fg: "#2d6a4f", bg: "#d8f3dc", tag: "YOU"  },
-  husband: { fg: "#1d3557", bg: "#dbe4ff", tag: "HIM"  },
-  boys:    { fg: "#c45000", bg: "#ffe8d6", tag: "BOYS" },
+  wife:    { fg: "#2d6a4f", bg: "#d8f3dc", tag: "MAD"  },
+  husband: { fg: "#1d3557", bg: "#dbe4ff", tag: "ARI"  },
+  boys:    { fg: "#c45000", bg: "#ffe8d6", tag: "A+A" },
 };
 
 const FAMILY = [
   {
-    id: "wife", name: "You", emoji: "🌿",
-    age: 42, weight: "75 kg", height: "5'0\"",
+    id: "wife", name: "Maddie", emoji: "🌿",
+    age: 42, weight: "75 → 58 kg", height: "5'0\"",
     bmr: 1332, tdee: 1310, target: 1200,
     protein: 100, carbs: 110, fat: 40,
-    conditions: "Hypothyroid · PCOD · Mounjaro 10 mg (Fri PM)",
-    goal: "Lose 13–15 kg over 9–12 months",
+    conditions: "Hypothyroid · PCOD · Fatty liver · Mounjaro (Fri PM)",
+    goal: "Steady loss to 58 kg — ~0.4–0.5 kg/wk, 17 kg total. Slow is the only version that lasts.",
     rules: [
       "Synthroid 90 min before eating — nothing else with it",
       "Metformin ER 1000 mg WITH Monday lunch",
       "Dinner before 8 PM · No rice at dinner",
+      "1–2 tbsp chia daily — fibre blunts Mounjaro constipation, ALA omega-3 helps liver",
       "3.5 L water daily with pink salt + lemon",
       "Mounjaro Fri eve — lighter dinner, more water Sat",
       "Acupuncture Tue + Thu — 500 ml water before + after",
     ],
   },
   {
-    id: "husband", name: "Husband", emoji: "💙",
+    id: "husband", name: "Ari", emoji: "💙",
     age: 48, weight: "90 kg", height: "5'8\"",
     bmr: 1744, tdee: 2267, target: 1800,
     protein: 130, carbs: 120, fat: 65,
-    conditions: "Prediabetic · High HbA1c · Remote work",
-    goal: "Lose ~10 kg, normalise HbA1c to <5.7",
+    conditions: "Prediabetic · High HbA1c · Seasonal allergies · Remote work",
+    goal: "Lose ~10 kg while keeping muscle · HbA1c <5.7 · fewer allergy + cough flare-ups",
     rules: [
-      "Whole-wheat roti only — no white bread ever",
-      "Zero refined sugar or juice",
-      "Check blood sugar 2 h after biggest meal",
-      "20-min walk after dinner — non-negotiable",
-      "Roti not rice at dinner (matches wife's pattern)",
+      "Whole-wheat roti only — no white bread ever · zero refined sugar or juice",
+      "Gym Mon · Thu · Fri + weekends — 30–40 min, moderate loads. That is genuinely enough to keep muscle while losing weight; going heavy is not required. Land a 30–40 g protein meal within ~2 h after.",
+      "20-min walk after dinner — non-negotiable; check blood sugar 2 h after biggest meal",
+      "Vitamin D daily Oct–Apr (dose per doctor) — most BC adults run low; deficiency is linked to more respiratory infections",
+      "Salmon 2×/wk — omega-3s give modest, real anti-inflammatory support",
+      "Honest note: no food cures seasonal allergies. Saline rinse + a non-drowsy antihistamine outperform every 'immune' food. Diet's job here is sleep, weight and vitamin D.",
     ],
   },
   {
-    id: "boys", name: "Each Boy ×2", emoji: "🔥",
+    id: "boys", name: "Aayush & Archie", emoji: "🔥",
     age: 14, weight: "50 kg each", height: "5'4\"",
     bmr: 1451, tdee: 2250, target: 2400,
-    protein: 140, carbs: 280, fat: 85,
+    protein: 130, carbs: 280, fat: 85,
     conditions: "Active · Growing · No fish · Love beef",
-    goal: "Support growth, muscle, sustained energy",
+    goal: "Height + lean muscle. Drivers, in order: sleep, total calories, protein, activity. Genetics sets the ceiling.",
     rules: [
-      "Never skip breakfast before school",
+      "Sleep 9+ h — growth hormone peaks in deep sleep. No protein powder compensates for a short night.",
+      "Whey is food, not magic — 1 scoop/day max, the rest from real meals. Above ~2 g/kg (≈100–110 g) extra protein builds nothing extra.",
+      "Creatine 3–5 g/day: parent-approved. Plain monohydrate only, no blends. Mention it at the next checkup — it raises creatinine on blood tests and can look like a kidney flag if the doctor doesn't know.",
       "Protein within 30 min of evening practice",
+      "Calcium + vitamin D daily — yogurt, cottage cheese, milk",
       "Complex carbs only — no energy drinks or chips",
-      "Calcium daily — curd, cheese, yogurt",
-      "PB energy balls replace protein bars entirely",
     ],
   },
 ];
 
-// Reconciled 7-day plan. Wife's column = Week 1 verbatim. Husband adapts.
-// Boys diverge where needed. Each day shows cookStrategy with track count.
-const WEEK = [
+// Two alternating weeks. Maddie + Ari rotate A/B for variety.
+// Kids run the same four anchor bowls both weeks, synced to family cook tracks.
+const WEEK_A = [
   {
     tag: "MON", day: "Monday", effort: "🟢 Easy",
-    cookStrategy: "1 track. Sat's chicken soup reheats for everyone. Wife's locked portion + bigger bowls + roti for husband + extra chicken/rice for boys.",
+    cookStrategy: "1 track. Sat's batch soup reheats for everyone. Kids' lunch = rotisserie chicken bowls (zero cook). Kids self-assemble breakfast + snack at the Bowl Station.",
     breakfast: {
       wife:    { meal: "Masala Egg Bhurji (3 eggs)",  detail: "Onion · tomato · chilli · turmeric · 1 tsp ghee. Coffee AFTER.", p: 21, cal: 280 },
-      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan, after yours. Roti on tawa 2 min.",                    p: 26, cal: 370 },
-      boys:    { meal: "Beef wrap × 2 each",          detail: "Sunday's beef mince + 1 egg per wrap in WW tortilla. Grab and go.", p: 44, cal: 620 },
+      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan, after Maddie's. Roti on tawa 2 min.", p: 26, cal: 370 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "1 c Balkan yogurt · 1 scoop whey (24 g) · 1–2 tbsp chia · 1 sliced banana. Self-serve, zero cook.", p: 38, cal: 520 },
     },
     lunch: {
       wife:    { meal: "Chicken Dal Rice Bowl",       detail: "½ cup sella basmati · 150 g rotisserie chicken · 1 c masur dal · cucumber-tomato salad · 1 tsp ghee. **Metformin ER 1000 mg with this meal.**", p: 42, cal: 480 },
       husband: { meal: "Chicken Dal — no rice",       detail: "Same chicken + dal, 1 WW roti instead of rice. Salad on side.", p: 44, cal: 460 },
-      boysSchool: true,
-    },
-    boysSchool: {
-      name: "Beef mince rice thermos",
-      items: ["150 g Sunday batch beef mince", "1 c cooked rice in thermos", "1 apple", "30 g Kirkland mixed nuts", "1 Oikos yogurt cup"],
-      tip: "Pack Sunday night. Thermos keeps rice warm till lunch.",
-      p: 45, cal: 820,
+      boys:    { meal: "Chicken & Rice Bowl (each)",  detail: "150 g rotisserie chicken (same bird) · 1.5 c rice · cucumber + tomato · 1 tsp butter. Zero cook.", p: 40, cal: 660 },
+      boysSchool: false,
     },
     snack: {
       wife:    { meal: "2 boiled eggs + cucumber",  detail: "Phone alarm at 4 PM. Prevents 6 PM hunger crash.", p: 12, cal: 150 },
-      husband: { meal: "2 boiled eggs + 1 apple",    detail: "Same eggs. Apple has fiber to flatten the curve.", p: 14, cal: 200 },
-      boys:    { meal: "PB energy ball ×2 + apple + string cheese", detail: "Post-school, before practice. Calcium top-up.", p: 18, cal: 320 },
+      husband: { meal: "2 boiled eggs + 1 apple",    detail: "Same eggs. Apple has fibre to flatten the curve. **Gym day (Mon)** — this works pre-session; dinner is your post-workout protein.", p: 14, cal: 200 },
+      boys:    { meal: "Power Bowl (each)",          detail: "½ c cottage cheese + ½ c Balkan yogurt + drizzle of honey + 1 fruit. Creatine 3–5 g stirred in on training days.", p: 25, cal: 300 },
     },
     dinner: {
-      wife:    { meal: "Chicken Vegetable Soup 🔒",  detail: "Sat's batch — reheat. Zucchini · spinach · carrot · ginger. **No rice.**", p: 28, cal: 290 },
-      husband: { meal: "Same soup + 2 WW roti",      detail: "Bigger bowl + extra shredded chicken. Roti instead of rice.", p: 38, cal: 480 },
-      boys:    { meal: "Same soup + extra chicken + 1.5 c rice + 1 roti each", detail: "Same pot, generous serving + carbs.", p: 50, cal: 720 },
+      wife:    { meal: "Batch Vegetable Soup 🔒",    detail: "Sat's batch — reheat. Zucchini · spinach · carrot · ginger. **No rice.**", p: 28, cal: 290 },
+      husband: { meal: "Same soup + 2 WW roti",      detail: "Bigger bowl + extra shredded protein. Roti instead of rice.", p: 38, cal: 480 },
+      boys:    { meal: "Same soup + extra protein + 1.5 c rice each", detail: "Same pot, generous serving + carbs + glass of milk.", p: 50, cal: 750 },
     },
   },
   {
-    tag: "TUE", day: "Tuesday", effort: "🟡 2 tracks at dinner — keema for boys",
-    cookStrategy: "2 tracks. Reheat Sun batch dal → wife/husband. Boys' keema pan (10 min from pre-cooked mince). Total 12 min active.",
+    tag: "TUE", day: "Tuesday", effort: "🟡 1 keema pan at dinner",
+    cookStrategy: "Reheat Sun batch dal → Maddie/Ari. One keema pan (10 min from pre-cooked mince) feeds the kids' dinner. Kids' lunch = beef-rice bowls from the same Sunday mince, reheat only.",
     breakfast: {
       wife:    { meal: "Greek Yogurt & Egg Bowl",        detail: "200 g Oikos 0% · 2 boiled eggs · 5 walnuts · cinnamon. **Acupuncture today — 500 ml water before.**", p: 28, cal: 310 },
-      husband: { meal: "2 boiled eggs + yogurt + 1 roti", detail: "Sunday eggs. Roti tawa 2 min.",       p: 24, cal: 340 },
-      boys:    { meal: "Yogurt + 2 boiled eggs + nuts each", detail: "Zero cook. 200 g yogurt + Sunday eggs + 30 g nuts.", p: 32, cal: 480 },
+      husband: { meal: "2 boiled eggs + yogurt + 1 roti", detail: "Sunday eggs. Roti tawa 2 min.", p: 24, cal: 340 },
+      boys:    { meal: "Yogurt Power Bowl (each)",       detail: "Yogurt + whey + chia + banana. Self-serve.", p: 38, cal: 520 },
     },
     lunch: {
       wife:    { meal: "Baked Salmon + Chana Dal",        detail: "150 g salmon (turmeric + lemon + salt, 18 min @ 400 F) · 1 c chana dal · ½ c rice · sautéed spinach.", p: 44, cal: 490 },
-      husband: { meal: "Same salmon + dal + 1 roti",      detail: "Salmon is excellent for prediabetes. Roti instead of rice.", p: 46, cal: 460 },
-      boysSchool: true,
-    },
-    boysSchool: {
-      name: "Chicken wrap + cheese",
-      items: ["Leftover Mon chicken 150 g", "1 WW tortilla", "1 cheese slice", "1 banana", "30 g mixed nuts"],
-      tip: "Wrap cold chicken in tortilla with cheese. 2-min pack Monday night.",
-      p: 40, cal: 780,
+      husband: { meal: "Same salmon + dal + 1 roti",      detail: "Salmon is excellent for prediabetes — and the omega-3s are Ari's allergy-season support.", p: 46, cal: 460 },
+      boys:    { meal: "Beef & Rice Bowl (each)",         detail: "150 g Sunday batch mince reheated · 1.5 c rice · cucumber. 5 min. (No fish for the kids.)", p: 40, cal: 700 },
+      boysSchool: false,
     },
     snack: {
       wife:    { meal: "Cottage Cheese Bowl",         detail: "100 g Kirkland cottage cheese · 5 almonds · cucumber. **Acupuncture — 500 ml water after.**", p: 14, cal: 140 },
       husband: { meal: "Cottage cheese + cucumber",    detail: "Same — protein + low-GI.", p: 14, cal: 140 },
-      boys:    { meal: "Trail mix + string cheese + banana", detail: "Pre-practice fuel. Banana = fast glucose.", p: 14, cal: 320 },
+      boys:    { meal: "Power Bowl (each)",            detail: "Cottage cheese + Balkan yogurt + honey + fruit + creatine 3–5 g.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Masur Dal Soup + 1 egg 🔒",   detail: "1.5 c red lentil dal thinned to soup · 1 boiled egg stirred in · lemon + cumin · 1 small roti if hungry.", p: 22, cal: 280 },
       husband: { meal: "Same dal (bigger) + 1 egg + 2 roti", detail: "Bigger bowl. Egg + 2 roti for fullness.", p: 30, cal: 420 },
-      boys:    { meal: "Beef Keema + dal + 1.5 c rice + 1 roti each", detail: "Reheat Sun batch mince with onion+tomato 10 min. Eat alongside parents' dal.", p: 52, cal: 780 },
+      boys:    { meal: "Beef Keema + dal + 1.5 c rice each", detail: "Reheat Sun mince with onion+tomato 10 min. Eat alongside parents' dal. Glass of milk.", p: 52, cal: 800 },
     },
   },
   {
-    tag: "WED", day: "Wednesday", effort: "🟡 2 fast pans — 12 min total",
-    cookStrategy: "2 tracks, both fast. Prawn stir-fry for wife+husband (one pan). Beef stir-fry for boys (one pan). Same veg, same aromatics, parallel cook.",
+    tag: "WED", day: "Wednesday", effort: "🟢 Was 2 tracks — now 1.5",
+    cookStrategy: "Prawn stir-fry for Maddie + Ari (one pan). Kids self-serve Rice-Eggs-Cottage bowls — they can fry their own eggs. The old parallel beef track is gone.",
     breakfast: {
       wife:    { meal: "Spinach Mushroom Omelette",   detail: "3 eggs · spinach · 4–5 mushrooms · 1 tsp olive oil · turmeric. No bread.", p: 21, cal: 260 },
-      husband: { meal: "3 eggs + 1 WW roti",          detail: "Same pan after yours. Roti on tawa.", p: 25, cal: 360 },
-      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Big scramble in one pan. Toaster runs in parallel.", p: 36, cal: 560 },
+      husband: { meal: "3 eggs + 1 WW roti",          detail: "Same pan after Maddie's. Roti on tawa.", p: 25, cal: 360 },
+      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Variety day — big scramble in one pan, toaster in parallel.", p: 36, cal: 560 },
     },
     lunch: {
-      wife:    { meal: "Rotisserie Chicken + Mug Dal + Rice", detail: "150 g chicken (skin off) · 1 c moong dal · ½ c rice · bhindi or any veg stir-fry · 1 tsp ghee.", p: 40, cal: 470 },
+      wife:    { meal: "Rotisserie Chicken + Moong Dal + Rice", detail: "150 g chicken (skin off) · 1 c moong dal · ½ c rice · bhindi or any veg stir-fry · 1 tsp ghee.", p: 40, cal: 470 },
       husband: { meal: "Same chicken + dal + 1 roti", detail: "Roti not rice. Veg stir-fry generous.", p: 42, cal: 450 },
-      boysSchool: true,
-    },
-    boysSchool: {
-      name: "Beef burger patty + WW bun",
-      items: ["1 Sunday frozen beef patty (pan-fry in morning)", "1 whole wheat bun", "Cheese slice + lettuce + tomato", "1 apple", "30 g mixed nuts"],
-      tip: "Fry patty during breakfast — same pan, same time. Assemble in 3 min.",
-      p: 48, cal: 850,
+      boys:    { meal: "Chicken & Rice Bowl (each)",  detail: "Pan-sear 2 Sunday-marinated breasts (8 min) or use Sunday's pre-seared ones · 1.5 c rice · veg.", p: 38, cal: 660 },
+      boysSchool: false,
     },
     snack: {
       wife:    { meal: "2 eggs + small handful nuts", detail: "Measure the nuts — 20 g is easy to overdo. Green tea.", p: 14, cal: 200 },
-      husband: { meal: "2 eggs + nuts + apple",       detail: "Slightly bigger portion than yours.", p: 16, cal: 260 },
-      boys:    { meal: "PB energy balls ×2 + apple",  detail: "Pre-practice fuel.", p: 12, cal: 240 },
+      husband: { meal: "2 eggs + nuts + apple",       detail: "Slightly bigger portion than Maddie's.", p: 16, cal: 260 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Prawn Stir Fry 🔒",           detail: "150 g Kirkland prawns (thaw in morning) · peppers · zucchini · broccoli · ginger · garlic · low-sodium soy · 1 tsp sesame oil. **No rice.** 12 min.", p: 28, cal: 260 },
       husband: { meal: "Same prawn stir fry + 2 roti", detail: "Bigger prawn portion (200 g) + WW roti.", p: 38, cal: 460 },
-      boys:    { meal: "Beef stir-fry + rice + 1 roti each", detail: "Sun batch beef in 2nd pan, same veg + aromatics. 12 min parallel.", p: 50, cal: 740 },
+      boys:    { meal: "Rice, Eggs & Cottage Cheese (each)", detail: "3 sunny-side-up eggs over 1.5 c hot rice · big scoop cottage cheese stirred through until creamy · glass of milk. Self-serve — no second cook track.", p: 42, cal: 730 },
     },
   },
   {
     tag: "THU", day: "Thursday", effort: "🟢 Easy — fridge raid + reheat",
-    cookStrategy: "2 light tracks. Wife's bone broth + egg drop (8 min). Boys reheat dal + cook beef in one pan (10 min). Husband piggybacks on both.",
+    cookStrategy: "Maddie's bone broth + egg drop (8 min). Kids reheat mince + rice (5 min, their job). Ari piggybacks on both.",
     breakfast: {
       wife:    { meal: "Smoked Salmon + 2 Eggs",      detail: "80 g Kirkland smoked salmon · 2 boiled eggs · cucumber + lemon. Zero cook. **Acupuncture — water before + after.**", p: 28, cal: 290 },
       husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Same Thursday routine — consistency.", p: 26, cal: 360 },
-      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Big scramble · WW toast · 10 min.", p: 36, cal: 560 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana. Self-serve.", p: 38, cal: 520 },
     },
     lunch: {
       wife:    { meal: "Fish Fillet + Dal + Rice",    detail: "150 g tilapia (pan-fry 3 min/side, turmeric+lemon+salt) · 1 c chana/masur dal · ½ c rice · raita (100 g curd + cucumber + cumin).", p: 44, cal: 480 },
       husband: { meal: "Same fish + dal + 1 roti",    detail: "White fish is excellent for prediabetes.", p: 44, cal: 450 },
-      boysSchool: true,
-    },
-    boysSchool: {
-      name: "Chicken rice thermos + 2 eggs",
-      items: ["150 g chicken (fresh or leftover)", "1 c rice in thermos", "2 boiled eggs", "1 orange or banana", "30 g mixed nuts"],
-      tip: "Fill thermos with hot rice + chicken in morning. Eggs from fridge.",
-      p: 48, cal: 800,
+      boys:    { meal: "Chicken & Rice Bowl (each)",  detail: "Pan-sear Sunday-marinated breast in 1 tsp butter · 1.5 c rice · cucumber. (No fish for the kids.)", p: 38, cal: 660 },
+      boysSchool: false,
     },
     snack: {
       wife:    { meal: "Curd Bowl",                   detail: "150 g dahi · pinch cumin · 5 Kirkland pumpkin seeds. Mg top-up.", p: 10, cal: 130 },
       husband: { meal: "Curd + nuts + cucumber",      detail: "Same curd. Add 10 nuts + cucumber.", p: 14, cal: 200 },
-      boys:    { meal: "Trail mix + string cheese",   detail: "Calcium + sustained energy.", p: 10, cal: 280 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Bone Broth Egg Drop Soup 🔒", detail: "2 c Pacific bone broth · 2 eggs whisked + dropped in while boiling · spinach · ginger · spring onion · squeeze lemon. **8 min.**", p: 22, cal: 220 },
-      husband: { meal: "Same broth (bigger) + chicken + 2 roti", detail: "Bigger bowl + shred in 100 g chicken + 2 WW roti.", p: 36, cal: 460 },
-      boys:    { meal: "Beef stir-fry + reheated dal + rice", detail: "Last of Sun batch beef. Dal reheats. 10 min.", p: 50, cal: 740 },
+      husband: { meal: "Same broth (bigger) + chicken + 2 roti", detail: "Bigger bowl + shred in 100 g chicken + 2 WW roti. **Gym day (Thu)** — this is the post-workout meal, eat within ~2 h of the session.", p: 36, cal: 460 },
+      boys:    { meal: "Beef mince + dal + rice (each)", detail: "Last of Sun batch mince + dal reheat + 1.5 c rice. 8 min, their job. Milk.", p: 50, cal: 780 },
     },
   },
   {
-    tag: "FRI", day: "Friday", effort: "⚠️ Mounjaro eve — your dinner is small",
-    cookStrategy: "1 track. Big chicken soup pot for everyone. Wife's bowl is small tonight (Mounjaro nausea risk). Husband + boys eat normally.",
+    tag: "FRI", day: "Friday", effort: "⚠️ Mounjaro eve — Maddie's dinner is small",
+    cookStrategy: "1 track. Big chicken soup pot for everyone. Maddie's bowl is small tonight (Mounjaro nausea risk). Ari + kids eat normally.",
     breakfast: {
-      wife:    { meal: "Protein Yogurt Bowl",         detail: "200 g Oikos · 2 boiled eggs · 1 tbsp Kirkland almond butter · cinnamon. **Eat well — Mounjaro tonight, nausea may follow.**", p: 30, cal: 350 },
+      wife:    { meal: "Protein Yogurt Bowl",         detail: "200 g Oikos · 1 tbsp chia · 2 boiled eggs · 1 tbsp Kirkland almond butter · cinnamon. **Eat well — Mounjaro tonight, nausea may follow.**", p: 30, cal: 360 },
       husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Consistent Fri.", p: 26, cal: 360 },
-      boys:    { meal: "Beef wrap × 2 each",          detail: "Last of the week's mince + egg in WW tortilla.", p: 44, cal: 620 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana — or a beef wrap if they want a change.", p: 38, cal: 520 },
     },
     lunch: {
       wife:    { meal: "Chicken Tikka + Dal + Rice",  detail: "200 g chicken marinated in curd + spices, grilled · 1 c dal tadka · ½ c rice · salad. **Eat by 1 PM — Mounjaro evening kills appetite later.**", p: 48, cal: 490 },
       husband: { meal: "Same tikka + dal + 1 roti",   detail: "Roti not rice. Bigger salad.", p: 48, cal: 460 },
-      boysSchool: true,
-    },
-    boysSchool: {
-      name: "Beef wrap + cheese + yogurt",
-      items: ["150 g remaining beef mince in WW tortilla", "1 cheese slice", "Cucumber + carrot sticks", "1 Oikos yogurt cup", "30 g mixed nuts"],
-      tip: "Quick Friday morning assembly — 3 minutes.",
-      p: 44, cal: 820,
+      boys:    { meal: "Chicken Tikka & Rice Bowl (each)", detail: "Same tikka batch · 1.5 c rice · cucumber. One grill, three plates.", p: 42, cal: 680 },
+      boysSchool: false,
     },
     snack: {
       wife:    { meal: "1 egg + cottage cheese + cucumber", detail: "Light — Mounjaro evening, don't load up.", p: 16, cal: 160 },
-      husband: { meal: "Egg + nuts",                   detail: "Same as Wed. Routine.", p: 14, cal: 200 },
-      boys:    { meal: "PB energy ball + apple + string cheese", detail: "Pre-practice.", p: 16, cal: 300 },
+      husband: { meal: "Egg + nuts + yogurt cup",      detail: "**Gym day (Fri)** — yogurt cup right after the session, dinner follows as the anchor.", p: 19, cal: 280 },
+      boys:    { meal: "Power Bowl (each)",            detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Light Lentil Soup + 1 egg 🔒", detail: "Small bowl Amy's Organic Lentil Soup · 1 boiled egg stirred in · lemon + coriander. **7 PM. Stop eating after this.**", p: 18, cal: 240 },
-      husband: { meal: "Big chicken-veg soup + 2 roti", detail: "Use Pacific broth + rotisserie chicken + veg. Bigger bowl.", p: 34, cal: 500 },
-      boys:    { meal: "Big chicken soup + extra chicken + 1.5 c rice + 2 roti each", detail: "Same pot as husband. Generous portions.", p: 44, cal: 700 },
+      husband: { meal: "Big chicken-veg soup + 2 roti", detail: "Pacific broth + rotisserie chicken + veg. Bigger bowl.", p: 34, cal: 500 },
+      boys:    { meal: "Big chicken soup + extra chicken + 1.5 c rice each", detail: "Same pot as Ari. Generous portions + milk.", p: 46, cal: 730 },
     },
   },
   {
-    tag: "SAT", day: "Saturday", effort: "🟡 Family lunch + Sat dinner batch",
-    cookStrategy: "Big cultural lunch — everyone eats the same. Goat curry + dal + rice. Sat dinner = the BIG batch chicken soup (cooks Mon + Tue dinner too).",
+    tag: "SAT", day: "Saturday", effort: "🟡 Family lunch + big batch dinner",
+    cookStrategy: "Big cultural lunch — everyone eats the same. Goat curry + dal + rice. Sat dinner = the BIG batch chicken soup (covers Mon + Tue dinners of the coming week).",
     breakfast: {
       wife:    { meal: "Weekend Egg Feast",           detail: "3 eggs any style · 1 slice multigrain toast (no jam) · sliced tomato + cucumber · masala chai (no sugar). Take your time. Sit down.", p: 21, cal: 310 },
       husband: { meal: "3 eggs + 1 WW roti + small chai", detail: "Enjoy slowly. No sugar in chai.", p: 25, cal: 370 },
-      boys:    { meal: "4 eggs + beef mince + WW toast each", detail: "Big weekend breakfast. Fuel before any morning activity.", p: 48, cal: 680 },
+      boys:    { meal: "4 eggs + WW toast each",      detail: "Big weekend breakfast. Fuel before any morning activity.", p: 36, cal: 580 },
     },
     lunch: {
       wife:    { meal: "Goat Curry + Dal + Rice 🔒",  detail: "150 g goat (boneless) kosha or simple curry · 1 c masur dal · ½ c rice · light begun bhaja · 1 tsp ghee. Saturday is your cultural meal day. Enjoy fully.", p: 38, cal: 510 },
       husband: { meal: "Same goat + dal + 2 roti",    detail: "200 g goat. Roti not rice.", p: 42, cal: 530 },
-      boys:    { meal: "Same goat + dal + 1.5 c rice + 1 roti each", detail: "Generous portions. Family meal.", p: 50, cal: 780 },
+      boys:    { meal: "Same goat + dal + 1.5 c rice each", detail: "Generous portions. Family meal — full alignment.", p: 50, cal: 780 },
       boysSchool: false,
     },
     snack: {
       wife:    { meal: "Walk first, then 2 eggs + green tea", detail: "45-min weekend walk before snack. Pair it with the snack as reward.", p: 12, cal: 150 },
-      husband: { meal: "Walk together + nuts on return", detail: "Husband 20-min walk minimum. Joint cardio.", p: 8, cal: 180 },
-      boys:    { meal: "Trail mix + string cheese",   detail: "Or anything — Saturday is flexible.", p: 10, cal: 280 },
+      husband: { meal: "Walk together + nuts on return", detail: "Weekend gym slot (30–40 min) fits before lunch — the goat/curry lunch doubles as the post-workout meal. Walk still happens.", p: 8, cal: 180 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Or anything — Saturday is flexible.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Chicken Soup — Big Batch 🔒", detail: "300 g chicken + Pacific bone broth + zucchini + spinach + carrot + ginger. Make BIG. **Eat 1 bowl. Store rest for Mon + Tue.**", p: 30, cal: 290 },
       husband: { meal: "Same soup + 2 WW roti",       detail: "Bigger bowl from same pot. Roti.", p: 38, cal: 490 },
-      boys:    { meal: "Same soup + extra chicken + rice + 1 roti each", detail: "Big bowl + extras from same pot.", p: 52, cal: 730 },
+      boys:    { meal: "Same soup + extra chicken + rice each", detail: "Big bowl + extras from same pot + milk.", p: 50, cal: 750 },
     },
   },
   {
@@ -274,24 +252,201 @@ const WEEK = [
     cookStrategy: "Light cooking until 4 PM. Then the 90-min reset session that runs the entire week. Sunday is non-negotiable.",
     breakfast: {
       wife:    { meal: "Smoked Salmon Plate",         detail: "80 g Kirkland smoked salmon · 2 boiled eggs · 100 g Greek yogurt · cucumber + lemon. Rest day. No rushing.", p: 32, cal: 320 },
-      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan after yours.", p: 24, cal: 340 },
-      boys:    { meal: "Yogurt + 2 eggs + WW toast each", detail: "Simple Sunday — save energy for the week ahead.", p: 30, cal: 500 },
+      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan after Maddie's.", p: 24, cal: 340 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana. Zero cook Sunday.", p: 38, cal: 520 },
     },
     lunch: {
       wife:    { meal: "Prawn Dal Rice 🔒",           detail: "150 g Kirkland prawns · 1 c chana dal · ½ c rice · stir-fried veg · curd on side. Prep dal in morning (20 min pressure cooker).", p: 40, cal: 470 },
       husband: { meal: "Same prawn + dal + 1 roti",   detail: "Bigger prawn. Roti.", p: 42, cal: 450 },
-      boys:    { meal: "Same prawn + dal + 1.5 c rice + 1 roti each", detail: "OR leftover Sat goat curry if any.", p: 48, cal: 720 },
+      boys:    { meal: "Rice, Eggs & Cottage Cheese (each)", detail: "No fish for the kids — 3 eggs over 1.5 c rice + cottage cheese stirred through · OR leftover Sat goat curry if any.", p: 42, cal: 730 },
       boysSchool: false,
     },
     snack: {
-      wife:    { meal: "Prep window + 100 g cottage cheese + 5 walnuts", detail: "**4 PM = batch cook starts.** Boil 8–10 eggs while you eat this. 20 min of work = whole week sorted.", p: 14, cal: 170 },
-      husband: { meal: "Same window — helps chop veg", detail: "Join the prep. Walk after.", p: 10, cal: 200 },
-      boys:    { meal: "Can help portion nuts + bag",  detail: "Builds independence. Their lunchboxes, their job.", p: 8, cal: 250 },
+      wife:    { meal: "Prep window + 100 g cottage cheese + 5 walnuts", detail: "**4 PM = batch cook starts.** Boil eggs while you eat this. 20 min of work = whole week sorted.", p: 14, cal: 170 },
+      husband: { meal: "Same window — helps chop veg", detail: "Join the prep. Optional weekend session earlier in the day; walk after dinner regardless.", p: 10, cal: 200 },
+      boys:    { meal: "Power Bowl (each) + help portion", detail: "They restock the Bowl Station + portion nuts. Their meals, their job.", p: 25, cal: 300 },
     },
     dinner: {
       wife:    { meal: "Dal Soup + 1 Roti + 1 Egg 🔒", detail: "Thin batch dal with water + lemon + ginger to soup consistency. 1 roti. 1 boiled egg. Easy Sunday. **8 min reheat.**", p: 22, cal: 280 },
       husband: { meal: "Same dal soup + 2 roti + 1 egg", detail: "Bigger bowl. 2 roti.", p: 28, cal: 360 },
-      boys:    { meal: "Big dal soup + 2 eggs + 2 roti each", detail: "Generous bowl + boiled eggs.", p: 36, cal: 500 },
+      boys:    { meal: "Dal soup + 2 eggs + 1 c rice each", detail: "Generous bowl + boiled eggs + milk.", p: 38, cal: 560 },
+    },
+  },
+];
+const WEEK_B = [
+  {
+    tag: "MON", day: "Monday", effort: "🟢 Easy",
+    cookStrategy: "1 track. Sat's batch shorba reheats for everyone. Kids on rotisserie chicken bowls — zero cook. Maddie + Ari join the kids' chia-yogurt track at breakfast: one station, three bowls.",
+    breakfast: {
+      wife:    { meal: "Chia-Yogurt Protein Bowl",   detail: "¾ c Greek yogurt · 1 tbsp chia · ½ scoop whey · 5 walnuts · cinnamon. Coffee AFTER Synthroid gap.", p: 30, cal: 320 },
+      husband: { meal: "Chia-yogurt bowl + 1 boiled egg", detail: "Same station as the kids. Zero pans on a Monday.", p: 28, cal: 380 },
+      boys:    { meal: "Yogurt Power Bowl (each)",   detail: "1 c Balkan yogurt · 1 scoop whey (24 g) · 1–2 tbsp chia · 1 sliced banana. Self-serve.", p: 38, cal: 520 },
+    },
+    lunch: {
+      wife:    { meal: "Turkey Keema + Moong Dal + Rice", detail: "150 g lean turkey keema · 1 c moong dal · ½ c rice · salad · 1 tsp ghee. **Metformin ER 1000 mg with this meal.**", p: 42, cal: 470 },
+      husband: { meal: "Same keema + dal + 1 roti",  detail: "Roti instead of rice. Salad on side.", p: 44, cal: 460 },
+      boys:    { meal: "Chicken & Rice Bowl (each)", detail: "150 g rotisserie chicken · 1.5 c rice · cucumber + tomato · 1 tsp butter. Zero cook.", p: 40, cal: 660 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "1 boiled egg + 100 g cottage cheese", detail: "4 PM alarm. Cucumber on the side.", p: 16, cal: 150 },
+      husband: { meal: "Egg + cottage cheese + apple", detail: "Same, plus fibre. **Gym day (Mon)** — pre-session fuel; the shorba + roti after covers recovery.", p: 18, cal: 210 },
+      boys:    { meal: "Power Bowl (each)",           detail: "½ c cottage cheese + ½ c Balkan yogurt + honey + fruit. Creatine 3–5 g stirred in on training days.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Turkey-Veg Shorba 🔒",       detail: "Sat's batch — reheat. Thin spiced soup, loaded veg. **No rice.**", p: 28, cal: 280 },
+      husband: { meal: "Same shorba + 2 WW roti",    detail: "Bigger bowl + extra turkey.", p: 38, cal: 470 },
+      boys:    { meal: "Same shorba + extra turkey + 1.5 c rice each", detail: "Same pot + carbs + glass of milk.", p: 48, cal: 730 },
+    },
+  },
+  {
+    tag: "TUE", day: "Tuesday", effort: "🟡 One tikka pan covers 2 meals",
+    cookStrategy: "Grill Sunday-marinated tikka once — it feeds Maddie + Ari's lunch AND the kids' dinner. Kids' lunch = beef-rice bowls, reheat only.",
+    breakfast: {
+      wife:    { meal: "Masala Omelette (3 eggs)",       detail: "Onion · chilli · coriander · 1 tsp ghee. **Acupuncture today — 500 ml water before.**", p: 21, cal: 270 },
+      husband: { meal: "3-egg omelette + 1 WW roti",     detail: "Same pan, after Maddie's.", p: 25, cal: 360 },
+      boys:    { meal: "Yogurt Power Bowl (each)",       detail: "Yogurt + whey + chia + banana. Self-serve.", p: 38, cal: 520 },
+    },
+    lunch: {
+      wife:    { meal: "Chicken Tikka Salad Bowl",        detail: "180 g tikka (Sun marinade, grill 12 min) · big salad · ½ c rice · curd.", p: 46, cal: 470 },
+      husband: { meal: "Same tikka + salad + 1 roti",     detail: "Roti not rice. Post-gym day? This is your anchor meal.", p: 48, cal: 460 },
+      boys:    { meal: "Beef & Rice Bowl (each)",         detail: "150 g Sunday batch mince reheated · 1.5 c rice · cucumber. 5 min.", p: 40, cal: 700 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Oikos cup + 5 almonds",       detail: "**Acupuncture — 500 ml water after.**", p: 17, cal: 160 },
+      husband: { meal: "Cottage cheese + cucumber",    detail: "Protein + low-GI.", p: 14, cal: 140 },
+      boys:    { meal: "Power Bowl (each)",            detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Palak Dal Soup + 1 egg 🔒",   detail: "Batch dal + spinach thinned to soup · 1 boiled egg · lemon + cumin.", p: 22, cal: 270 },
+      husband: { meal: "Same dal (bigger) + 1 egg + 2 roti", detail: "Bigger bowl for fullness.", p: 30, cal: 430 },
+      boys:    { meal: "Chicken tikka + dal + 1.5 c rice each", detail: "From the same lunch tikka batch — grill once, feed twice. Milk.", p: 52, cal: 780 },
+    },
+  },
+  {
+    tag: "WED", day: "Wednesday", effort: "🟢 1.5 tracks",
+    cookStrategy: "Chicken-veg stir-fry for Maddie + Ari (one pan). Kids self-serve Rice-Eggs-Cottage bowls. No parallel meat track.",
+    breakfast: {
+      wife:    { meal: "Smoked Salmon + 2 Eggs",      detail: "80 g Kirkland smoked salmon · 2 boiled eggs · cucumber + lemon. Zero cook.", p: 28, cal: 290 },
+      husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Routine keeps the glucose curve boring — boring is the goal.", p: 26, cal: 360 },
+      boys:    { meal: "4 scrambled eggs + WW toast each", detail: "Variety day — one pan, toaster in parallel.", p: 36, cal: 560 },
+    },
+    lunch: {
+      wife:    { meal: "Prawn Bhuna + Chana Dal + Rice", detail: "150 g prawns bhuna-style · 1 c chana dal · ½ c rice · veg.", p: 42, cal: 480 },
+      husband: { meal: "Same prawn + dal + 1 roti",   detail: "Roti not rice.", p: 44, cal: 460 },
+      boys:    { meal: "Chicken & Rice Bowl (each)",  detail: "Pan-sear Sunday-marinated breast in 1 tsp butter · 1.5 c rice · veg. (No fish for the kids.)", p: 38, cal: 660 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "2 eggs + small handful nuts", detail: "Measure the nuts. Green tea.", p: 14, cal: 200 },
+      husband: { meal: "2 eggs + nuts + apple",       detail: "Slightly bigger portion.", p: 16, cal: 260 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Chicken-Veg Stir Fry 🔒",     detail: "150 g chicken breast strips · peppers · broccoli · zucchini · ginger-garlic · low-sodium soy. **No rice.** 12 min.", p: 34, cal: 300 },
+      husband: { meal: "Same stir fry + 2 roti",      detail: "200 g chicken portion + WW roti.", p: 44, cal: 500 },
+      boys:    { meal: "Rice, Eggs & Cottage Cheese (each)", detail: "3 sunny-side-up eggs over 1.5 c hot rice · big scoop cottage cheese stirred through until creamy · milk. Self-serve.", p: 42, cal: 730 },
+    },
+  },
+  {
+    tag: "THU", day: "Thursday", effort: "🟢 Easy — reheat night",
+    cookStrategy: "Maddie's bone broth egg drop (8 min). Kids reheat mince + dal + rice (their job). Ari piggybacks.",
+    breakfast: {
+      wife:    { meal: "Chia-Yogurt Protein Bowl",    detail: "¾ c Greek yogurt · 1 tbsp chia · ½ scoop whey · walnuts. **Acupuncture — water before + after.**", p: 30, cal: 320 },
+      husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Thursday routine.", p: 26, cal: 360 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana.", p: 38, cal: 520 },
+    },
+    lunch: {
+      wife:    { meal: "Baked Salmon + Masur Dal + Rice", detail: "150 g salmon (18 min @ 400 F) · 1 c masur dal · ½ c rice · sautéed spinach.", p: 44, cal: 490 },
+      husband: { meal: "Same salmon + dal + 1 roti",  detail: "Second salmon of the week — omega-3 target hit.", p: 46, cal: 460 },
+      boys:    { meal: "Beef & Rice Bowl (each)",     detail: "Sunday mince reheated · 1.5 c rice · cucumber. (No fish for the kids.)", p: 40, cal: 700 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Curd Bowl",                   detail: "150 g dahi · cumin · 5 pumpkin seeds.", p: 10, cal: 130 },
+      husband: { meal: "Curd + nuts + cucumber",      detail: "Same curd, bigger add-ons.", p: 14, cal: 200 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Bone Broth Egg Drop Soup 🔒", detail: "2 c Pacific bone broth · 2 whisked eggs · spinach · ginger · lemon. **8 min.**", p: 22, cal: 220 },
+      husband: { meal: "Same broth + chicken + 2 roti", detail: "Bigger bowl + 100 g shredded chicken. **Gym day (Thu)** — post-workout meal, within ~2 h of the session.", p: 36, cal: 460 },
+      boys:    { meal: "Beef keema + dal + rice (each)", detail: "Last of Sun mince + dal reheat + 1.5 c rice + milk. 8 min, their job.", p: 50, cal: 780 },
+    },
+  },
+  {
+    tag: "FRI", day: "Friday", effort: "⚠️ Mounjaro eve — Maddie's dinner is small",
+    cookStrategy: "1 track. Big soup pot for everyone. Maddie small bowl tonight. Ari + kids normal.",
+    breakfast: {
+      wife:    { meal: "Protein Yogurt Bowl + chia",  detail: "200 g Oikos · 1 tbsp chia · 2 boiled eggs · almond butter · cinnamon. **Eat well — Mounjaro tonight.**", p: 30, cal: 360 },
+      husband: { meal: "2 eggs + yogurt + 1 WW roti", detail: "Consistent Fri.", p: 26, cal: 360 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana.", p: 38, cal: 520 },
+    },
+    lunch: {
+      wife:    { meal: "Light Chicken Kosha + Dal + Rice", detail: "180 g chicken kosha (less oil) · 1 c dal · ½ c rice · salad. **Eat by 1 PM.**", p: 46, cal: 490 },
+      husband: { meal: "Same kosha + dal + 1 roti",   detail: "Roti not rice.", p: 48, cal: 470 },
+      boys:    { meal: "Chicken Kosha & Rice Bowl (each)", detail: "Same kosha pot · 1.5 c rice. One pot, three plates.", p: 42, cal: 690 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "1 egg + cottage cheese + cucumber", detail: "Light — Mounjaro evening.", p: 16, cal: 160 },
+      husband: { meal: "Egg + nuts + yogurt cup",      detail: "**Gym day (Fri)** — yogurt cup right after the session.", p: 19, cal: 280 },
+      boys:    { meal: "Power Bowl (each)",            detail: "Cottage cheese + yogurt + honey + fruit.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Light Lentil Soup + 1 egg 🔒", detail: "Small bowl Amy's Lentil Soup · 1 boiled egg · lemon + coriander. **7 PM. Stop after this.**", p: 18, cal: 240 },
+      husband: { meal: "Chicken-veg soup + 2 roti",    detail: "Pacific broth + chicken + veg. Bigger bowl.", p: 34, cal: 500 },
+      boys:    { meal: "Same soup + extra chicken + 1.5 c rice each", detail: "Generous portions + milk.", p: 46, cal: 730 },
+    },
+  },
+  {
+    tag: "SAT", day: "Saturday", effort: "🟡 Family lunch + big batch dinner",
+    cookStrategy: "Week B cultural lunch = Bengali chicken curry (murgir jhol) — the whole family eats the same, kids fully aligned. Sat dinner = big turkey-veg shorba batch (covers Mon + Tue dinners of the coming week).",
+    breakfast: {
+      wife:    { meal: "Weekend Egg Feast",           detail: "3 eggs any style · multigrain toast · tomato + cucumber · masala chai (no sugar). Sit down.", p: 21, cal: 310 },
+      husband: { meal: "3 eggs + 1 WW roti + chai",   detail: "No sugar in chai.", p: 25, cal: 370 },
+      boys:    { meal: "4 eggs + WW toast each",      detail: "Big weekend breakfast.", p: 36, cal: 580 },
+    },
+    lunch: {
+      wife:    { meal: "Murgir Jhol + Dal + Rice 🔒", detail: "150 g chicken curry (Bengali home style) · 1 c masur dal · ½ c rice · begun bhaja · 1 tsp ghee. Cultural meal — enjoy fully.", p: 40, cal: 500 },
+      husband: { meal: "Same jhol + dal + 2 roti",    detail: "200 g chicken. Roti not rice.", p: 46, cal: 520 },
+      boys:    { meal: "Same jhol + dal + 1.5 c rice each", detail: "One pot for four plates — full alignment.", p: 52, cal: 790 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Walk first, then 2 eggs + green tea", detail: "45-min weekend walk before snack.", p: 12, cal: 150 },
+      husband: { meal: "Walk together + nuts on return", detail: "Weekend gym slot fits before lunch — murgir jhol doubles as the post-workout meal.", p: 8, cal: 180 },
+      boys:    { meal: "Power Bowl (each)",           detail: "Or anything — Saturday is flexible.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Turkey-Veg Shorba — Big Batch 🔒", detail: "500 g lean turkey + broth + zucchini + spinach + carrot + ginger + warm spices. Make BIG. **1 bowl tonight, rest covers Mon + Tue.**", p: 30, cal: 280 },
+      husband: { meal: "Same shorba + 2 WW roti",     detail: "Bigger bowl from same pot.", p: 38, cal: 470 },
+      boys:    { meal: "Same shorba + extra turkey + rice each", detail: "Big bowl + carbs + milk.", p: 48, cal: 730 },
+    },
+  },
+  {
+    tag: "SUN", day: "Sunday", effort: "🔴 90-min Batch Cook at 4 PM",
+    cookStrategy: "Light day until 4 PM, then the batch session. Week B Sunday lunch is all-chicken — no fish conflict, everyone eats the same.",
+    breakfast: {
+      wife:    { meal: "Spinach-Mushroom Omelette + yogurt", detail: "3 eggs · spinach · mushrooms · 100 g Greek yogurt on the side.", p: 26, cal: 310 },
+      husband: { meal: "2 eggs + 1 WW roti + yogurt", detail: "Same pan after Maddie's.", p: 24, cal: 340 },
+      boys:    { meal: "Yogurt Power Bowl (each)",    detail: "Yogurt + whey + chia + banana.", p: 38, cal: 520 },
+    },
+    lunch: {
+      wife:    { meal: "Kadai Chicken + Chana Dal + Rice 🔒", detail: "150 g kadai chicken · 1 c chana dal · ½ c rice · curd on side. Dal in the morning pressure cooker.", p: 42, cal: 480 },
+      husband: { meal: "Same kadai + dal + 1 roti",   detail: "Bigger chicken. Roti.", p: 44, cal: 460 },
+      boys:    { meal: "Same kadai + dal + 1.5 c rice each", detail: "Whole family, one pot — full alignment.", p: 50, cal: 760 },
+      boysSchool: false,
+    },
+    snack: {
+      wife:    { meal: "Prep window + 100 g cottage cheese + walnuts", detail: "**4 PM = batch cook starts.**", p: 14, cal: 170 },
+      husband: { meal: "Same window — chops veg",     detail: "Join the prep. Optional weekend session earlier in the day; walk after dinner regardless.", p: 10, cal: 200 },
+      boys:    { meal: "Power Bowl (each) + restock station", detail: "They refill whey/chia/honey + portion nuts. Their meals, their job.", p: 25, cal: 300 },
+    },
+    dinner: {
+      wife:    { meal: "Dal Soup + 1 Roti + 1 Egg 🔒", detail: "Thin batch dal to soup · 1 roti · 1 boiled egg. **8 min reheat.**", p: 22, cal: 280 },
+      husband: { meal: "Same dal soup + 2 roti + 1 egg", detail: "Bigger bowl.", p: 28, cal: 360 },
+      boys:    { meal: "Dal soup + 2 eggs + 1 c rice each", detail: "Generous bowl + milk.", p: 38, cal: 560 },
     },
   },
 ];
@@ -300,25 +455,65 @@ const WEEK = [
 // Sunday 90-min Batch Cook (4:00 – 5:30 PM)
 // ───────────────────────────────────────────────────────────────────
 const SUNDAY_BATCH = [
-  { mins: 12, task: "Boil 12 eggs",                          covers: "Mon + Tue breakfasts · all weekday snacks · Sun/Mon dinner egg" },
-  { mins: 20, task: "Pressure cook masur + chana dal",       covers: "Mon dinner (wife already from Sat soup), Tue dinner dal soup, Wed lunch dal, Thu dinner dal reheat" },
-  { mins: 20, task: "Cook 1 kg beef mince with spices",      covers: "Mon boys' breakfast wraps + Mon boys' school lunch + Tue dinner keema base + Fri boys' breakfast wraps" },
-  { mins: 10, task: "Shape + freeze 4 beef burger patties",  covers: "Wed boys' school lunch — fry in morning during breakfast" },
-  { mins: 5,  task: "Marinate 2 kg chicken breast (curd + spices)", covers: "Used Fri lunch chicken tikka + Wed lunch + thermos chicken" },
+  { mins: 15, task: "Boil 18 eggs",                          covers: "Breakfasts · all weekday snacks · kids' Rice-Eggs-Cottage dinners · soup egg-drops" },
+  { mins: 20, task: "Pressure cook masur + chana dal",       covers: "Tue/Thu dal soups · Wed lunch dal · kids' keema-dal nights" },
+  { mins: 20, task: "Cook 1 kg beef mince with spices",      covers: "Kids' Beef & Rice bowls (Tue + Thu lunch) + keema dinner" },
+  { mins: 15, task: "Rice cooker: big batch (4 c dry sella)", covers: "Kids' bowls Mon–Wed + adult ½-cup portions. Second batch Wed evening — kids' job." },
+  { mins: 10, task: "Pan-sear 3–4 marinated chicken breasts", covers: "Kids' Chicken & Rice bowls — 90-sec reheat instead of a fresh cook" },
+  { mins: 5,  task: "Marinate 2 kg chicken breast (curd + spices)", covers: "Fri tikka/kosha lunch + mid-week bowls + Tue Week B tikka" },
   { mins: 15, task: "Chop all veg for the week",             covers: "Onions, peppers, zucchini, spinach, ginger-garlic paste — saves 5–8 min per meal" },
-  { mins: 5,  task: "Portion nuts: 7 bags × 30 g per boy",   covers: "All week boys' lunchboxes — zero morning effort" },
-  { mins: 3,  task: "Make Mon morning beef wrap filling",    covers: "Mon boys' breakfast — grab and go" },
+  { mins: 5,  task: "Set up the Bowl Station",               covers: "Whey tub + scoop · chia jar · honey · creatine monohydrate · measuring cups on the counter. Kids self-assemble breakfast + snack all week." },
+  { mins: 5,  task: "Portion nuts: 7 bags × 30 g per kid",   covers: "Grab-and-go all week — zero effort" },
 ];
 
 const BATCH_OUTPUTS = [
-  "12 boiled eggs → 2 breakfasts + 5 snacks + 2 dinner toppings",
-  "1 kg cooked beef mince → 3 days of boys' lunches + Tue keema dinner",
-  "4 frozen burger patties → Wed boys' lunch done",
+  "18 boiled eggs → breakfasts + snacks + kids' egg-rice dinners + soup egg-drops",
+  "1 kg cooked beef mince → kids' Beef & Rice bowls + keema night",
+  "Big rice batch → kids' bowls run on reheat till Wednesday",
+  "3–4 seared chicken breasts → Chicken & Rice bowls in 90 seconds",
   "2 pots of dal pressure cooked → Mon–Thu dinners on reheat",
-  "2 kg chicken marinated → Wed lunch + Fri tikka",
+  "2 kg chicken marinated → tikka/kosha + mid-week bowls",
   "All veg chopped → saves 5–8 min per meal every day",
-  "14 portion nut bags (7 per boy) → zero morning lunchbox effort",
+  "Bowl Station stocked → kids feed themselves breakfast + snack, every day",
 ];
+
+// ───────────────────────────────────────────────────────────────────
+// Kids' 4 Anchor Meals (reference)
+// ───────────────────────────────────────────────────────────────────
+const ANCHORS = [
+  {
+    name: "Yogurt Power Bowl", slot: "BREAKFAST · 5 days/wk", p: "38 g", cal: 520,
+    items: ["1 c Balkan yogurt", "1 scoop whey protein (24 g)", "1–2 tbsp chia seeds", "1 whole sliced banana"],
+    tip: "Zero cook, self-serve at the Bowl Station. Stir whey into yogurt first, then chia, then banana on top — no clumps.",
+  },
+  {
+    name: "Chicken & Rice Bowl", slot: "LUNCH · chicken days", p: "38 g", cal: 660,
+    items: ["1 seasoned chicken breast, pan-seared in 1 tsp butter/oil (or Sunday pre-seared, 90-sec reheat)", "1.5 c cooked rice (Sunday rice batch)", "Cucumber + tomato on the side"],
+    tip: "On beef days it becomes a Beef & Rice Bowl with Sunday mince — same format, same rice, zero extra cooking track. On rotisserie days it's fully zero-cook.",
+  },
+  {
+    name: "Power Bowl", slot: "4 PM SNACK · daily", p: "25 g", cal: 300,
+    items: ["½ c cottage cheese", "½ c Balkan yogurt", "Drizzle of honey", "1 piece of fruit alongside", "3–5 g creatine monohydrate — see note below"],
+    tip: "Creatine 3–5 g/day is one of the most-studied supplements there is, and no trial has shown harm in healthy adolescents — a beef-heavy diet already supplies 1–2 g/day naturally. Three things that matter: buy plain monohydrate (contamination risk lives in pre-workout blends, not this), keep water intake high, and mention it at the next checkup — creatine raises creatinine on blood tests and can be misread as a kidney issue. It only pays off alongside actual resistance training; it does nothing for height.",
+  },
+  {
+    name: "Rice, Eggs & Cottage Cheese", slot: "DINNER · fish nights", p: "42 g", cal: 730,
+    items: ["3 eggs sunny-side up (or Sunday boiled eggs)", "1.5 c hot cooked rice", "Big scoop cottage cheese stirred through the hot rice until creamy (it softens, it doesn't truly melt)", "Glass of milk"],
+    tip: "This is the conflict-killer: on prawn/fish nights the kids self-serve this instead of needing a separate meat track. They can cook it themselves at 14.",
+  },
+];
+
+// ───────────────────────────────────────────────────────────────────
+// School Mode — thermos/packed versions of the lunch bowl (Sept–June)
+// Same Sunday batch, same macros. Breakfast + snack + dinner unchanged.
+// ───────────────────────────────────────────────────────────────────
+const SCHOOL_LUNCH = {
+  MON: { name: "Chicken & Rice thermos",   items: ["150 g rotisserie chicken + 1.5 c hot rice in thermos", "Cucumber sticks", "1 banana", "30 g nut bag", "1 Oikos yogurt cup"], tip: "Fill thermos with hot rice in the morning — stays warm till lunch. Chicken from Sunday's bird.", p: 45, cal: 830 },
+  TUE: { name: "Beef & Rice thermos",      items: ["150 g Sunday batch mince + 1.5 c hot rice in thermos", "1 apple", "30 g nut bag", "String cheese"], tip: "Reheat mince + rice together 2 min, straight into thermos.", p: 44, cal: 830 },
+  WED: { name: "Chicken bowl thermos",     items: ["1 Sunday pre-seared breast, sliced, + 1.5 c rice in thermos", "Carrot + cucumber sticks", "1 banana", "30 g nut bag"], tip: "90-sec reheat of the pre-seared breast, slice, pack. 4 min total.", p: 42, cal: 800 },
+  THU: { name: "Beef keema-dal rice thermos", items: ["Sunday mince + dal + 1.5 c rice, reheated together", "1 orange", "30 g nut bag", "1 Oikos yogurt cup"], tip: "One-container thermos meal. Kids can pack it themselves the night before, reheat in the morning.", p: 46, cal: 840 },
+  FRI: { name: "Chicken wrap + cheese",    items: ["Leftover chicken 150 g in WW tortilla + cheese slice", "Cucumber + carrot sticks", "1 banana", "30 g nut bag", "String cheese"], tip: "Cold-safe Friday — no thermos needed. 3-min morning assembly.", p: 42, cal: 800 },
+};
 
 // ───────────────────────────────────────────────────────────────────
 // 3 Shopping Cadences
@@ -328,31 +523,32 @@ const SHOPPING = {
     title: "Weekly Fresh Run",
     when: "Every Sunday morning · or Friday after work",
     where: "Safeway / local produce store + Costco for rotisserie chicken",
-    estCost: "CAD $35–45",
-    rationale: "Fresh, fast-turnover items only. Produce stays crisp, bread stays fresh, the one rotisserie chicken anchors 3 meals.",
+    estCost: "CAD $50–65",
+    rationale: "Fresh, fast-turnover items only. The kids' bowls burn through yogurt, bananas and milk — those quantities are real, not typos.",
     sections: [
       { cat: "Fresh Produce", items: [
         "Baby spinach + mixed greens (1 large bag)",
-        "Cucumbers × 4",
+        "Cucumbers × 5",
         "Tomatoes × 6",
         "Zucchini × 2",
         "Bell peppers × 3 (mixed colours)",
         "Mushrooms (1 punnet)",
         "Broccoli × 1 head",
-        "Bananas × 8 (boys' lunchboxes + Wed snack)",
-        "Apples × 6 (lunchboxes + snacks)",
+        "Bananas × 14 (kids' bowls use 2/day)",
+        "Apples × 6",
         "Lemons × 4",
         "Fresh ginger thumb + garlic bulb",
         "Coriander + green chilli (small bunches)",
       ]},
-      { cat: "Bread + Refrigerated", items: [
-        "Kirkland Rotisserie Chicken × 1 (the MVP — Mon + Wed lunches)",
-        "WW tortillas if running low (boys' wraps)",
-        "Sourdough loaf — optional weekend treat (Cobs or Costco)",
+      { cat: "Dairy — the bowl engine", items: [
+        "Balkan-style yogurt 2 × 650 g tubs (Astro / Western Family at Safeway)",
+        "Milk 4 L (kids' dinner glass + bowls)",
+        "Cottage cheese tub if the Costco one is running low",
       ]},
-      { cat: "Quick Top-ups", items: [
-        "Oikos Triple Zero cup × 2 (Tue + Thu emergency)",
-        "Milk (1 jug if running low)",
+      { cat: "Bread + Refrigerated", items: [
+        "Kirkland Rotisserie Chicken × 1 (the MVP — Mon lunches for all four)",
+        "WW tortillas if running low",
+        "Oikos Triple Zero cup × 2 (backup snacks)",
       ]},
     ],
   },
@@ -360,25 +556,25 @@ const SHOPPING = {
     title: "Mid-Week Top-Up",
     when: "Wednesday evening · 15-min stop",
     where: "Nearest Safeway or corner store",
-    estCost: "CAD $15–25",
-    rationale: "Boys eat fruit fast. Bread runs out. This is the small refill that prevents Thu/Fri grocery-stress.",
+    estCost: "CAD $20–30",
+    rationale: "The bowls empty the dairy shelf by Wednesday. This refill prevents Thu/Fri improvising.",
     sections: [
+      { cat: "Bowl refills", items: [
+        "Balkan yogurt 1 × 650 g tub",
+        "Bananas × 6",
+        "Cottage cheese small tub if needed",
+        "Milk 2 L if the 4 L is gone",
+      ]},
       { cat: "Produce Refill", items: [
-        "Bananas × 4 more (boys go through these fast)",
         "Apples × 3 more",
-        "Spinach or salad greens (small bag — replenish if used)",
+        "Spinach or salad greens (small bag)",
         "Cucumber × 2 more",
-        "1 fresh lemon if you've used them",
+        "1 fresh lemon if used up",
       ]},
-      { cat: "Bread + Dairy", items: [
-        "Whole wheat bread loaf (boys' toast)",
-        "1 dozen eggs if Sunday's are gone",
-        "Greek yogurt cup × 2 (Thu + Fri snack backup)",
-        "Cheese slices if boys' lunch supply is low",
-      ]},
-      { cat: "Optional", items: [
-        "Coriander (refresh if Tue dal used it)",
-        "Avocado × 2 (if boys' Thu/Fri breakfast needs variety)",
+      { cat: "Bread + Eggs", items: [
+        "Whole wheat bread loaf",
+        "1 dozen eggs if Sunday's 18 are gone (kids' egg-rice dinners use 6/night)",
+        "Cheese slices if low",
       ]},
     ],
   },
@@ -386,60 +582,58 @@ const SHOPPING = {
     title: "Monthly Costco Run",
     when: "First weekend of every month · 90 min trip",
     where: "Costco Canada (North Vancouver / Burnaby)",
-    estCost: "CAD $220–280",
-    rationale: "Bulk + frozen + pantry. One trip stocks 3–4 weeks. Freeze proteins on arrival. Amy's 12-pack is your floor — 12 emergency dinners.",
+    estCost: "CAD $260–320",
+    rationale: "Bulk + frozen + pantry + the new Bowl Station supplies. One trip stocks 3–4 weeks. Freeze proteins on arrival.",
     sections: [
+      { cat: "Bowl Station (new)", items: [
+        "Whey protein (Kirkland whey isolate or equivalent — pick one that's third-party tested, e.g. NSF/Informed Sport logo)",
+        "Chia seeds 1.5 kg bag",
+        "Liquid honey",
+        "Creatine monohydrate — plain only, no pre-workout blends. Third-party tested (NSF / Informed Sport) if available.",
+        "Kirkland Cottage Cheese × 2 large tubs (Power Bowls + egg-rice dinners)",
+      ]},
       { cat: "Frozen Proteins (the engine)", items: [
-        "Kirkland Extra Lean Ground Beef 3 kg (boys + Tue keema)",
-        "Kirkland Frozen Chicken Breasts 2 kg (lunches + dinners)",
-        "Kirkland Frozen Atlantic Salmon Fillets (your Tue + Thu lunches)",
-        "Kirkland Frozen Cooked Prawns (large bag — Wed dinner + Sun lunch)",
-        "Kirkland Beef Meatballs frozen (backup for Tue dinner if no time to cook keema)",
+        "Kirkland Extra Lean Ground Beef 3 kg (kids' bowls + keema)",
+        "Kirkland Frozen Chicken Breasts 2–3 kg (bowls + tikka + lunches)",
+        "Lean ground turkey (Week B shorba + keema)",
+        "Kirkland Frozen Atlantic Salmon Fillets (Maddie + Ari, 2×/wk)",
+        "Kirkland Frozen Cooked Prawns (large bag)",
+        "Kirkland Beef Meatballs frozen (backup dinner)",
       ]},
       { cat: "Refrigerated Bulk", items: [
         "Kirkland Smoked Atlantic Salmon (Thu + Sun breakfast)",
-        "Kirkland Cottage Cheese (large tub)",
         "Oikos Greek Yogurt Plain 0% multi-pack",
         "Kirkland Hard Boiled Eggs 2-pack box (emergency backup)",
-        "Kirkland Marble Cheddar block (1.8 kg — grate as needed)",
-        "Kirkland Shredded Mozzarella (boys' burger night)",
-        "Kirkland Eggs 18-pack × 2",
-        "Kirkland Deli Roast Beef (boys' optional rotation)",
+        "Kirkland Marble Cheddar block (1.8 kg)",
+        "Kirkland Eggs 18-pack × 3 (egg-rice dinners burn 6/night)",
+        "Kirkland Deli Roast Beef (kids' optional rotation)",
       ]},
-      { cat: "Soups + Broths (your floor)", items: [
+      { cat: "Soups + Broths (the floor)", items: [
         "Pacific Foods Organic Chicken Bone Broth 6-pack",
         "Pacific Foods Organic Chicken Broth 6-pack",
-        "Amy's Organic Lentil Soup 12-pack ⭐ (your Fri Mounjaro dinner + 12 emergency meals)",
+        "Amy's Organic Lentil Soup 12-pack ⭐ (Maddie's Fri Mounjaro dinner + emergency meals)",
       ]},
       { cat: "Pantry Long-Shelf", items: [
-        "Sella basmati rice 4 kg",
-        "Masur dal 2 kg",
-        "Chana dal 2 kg",
-        "Moong dal 1 kg",
-        "Whole wheat atta flour 5 kg (husband's roti)",
-        "Kirkland Extra Virgin Olive Oil",
-        "Ghee jar (large)",
-        "Low-sodium soy sauce",
-        "Kirkland taco/curry spice blend",
-        "Pink Himalayan salt",
+        "Sella basmati rice 8 kg (bowls doubled the rice burn rate)",
+        "Masur dal 2 kg · Chana dal 2 kg · Moong dal 1 kg",
+        "Whole wheat atta flour 5 kg (Ari's roti)",
+        "Kirkland Extra Virgin Olive Oil · Ghee jar (large) · butter",
+        "Low-sodium soy sauce · curry spice blend · pink Himalayan salt",
       ]},
-      { cat: "Snacks + Lunchbox Engine", items: [
-        "Kirkland Mixed Nuts unsalted (boys × 7 bags/wk × 4 wk)",
-        "Kirkland Raw Almonds",
-        "Kirkland Almond Butter (your Fri yogurt)",
-        "Kirkland Pumpkin Seeds (your Thu snack)",
-        "Whole wheat tortillas (Kirkland — boys' wraps)",
-        "WW burger buns (boys' Wed lunch)",
-        "Trail mix bag",
-        "Mini dark chocolate chips + rolled oats + honey (for PB energy balls — boys' snack station)",
-        "Natural peanut butter jar",
+      { cat: "Snacks", items: [
+        "Kirkland Mixed Nuts unsalted (7 bags/wk × 2 kids × 4 wk)",
+        "Kirkland Raw Almonds · Kirkland Pumpkin Seeds",
+        "Kirkland Almond Butter (Maddie's Fri yogurt)",
+        "Whole wheat tortillas (Kirkland)",
+        "Rolled oats + mini dark choc chips + natural peanut butter (PB energy balls)",
       ]},
       { cat: "Supplements + Health", items: [
-        "Kirkland Vitamin D3 (ask doctor about dose)",
-        "Kirkland Magnesium Glycinate (your Thu pumpkin seed top-up)",
+        "Kirkland Vitamin D3 — Ari + kids, dose per doctor (BC winters)",
+        "Kirkland Magnesium Glycinate (Maddie)",
         "Synthroid refill check — pharmacy",
         "Metformin refill check — pharmacy",
         "Mounjaro pen supply — verify",
+        "Saline rinse kit for Ari's allergy season — works better than any food",
       ]},
     ],
   },
@@ -451,7 +645,7 @@ const SHOPPING = {
 const EMERGENCY = {
   wife: [
     { type: "B", meal: "2 Kirkland hard-boiled eggs + Oikos Triple Zero cup", time: "0 min", p: "26 g" },
-    { type: "B", meal: "Kirkland smoked salmon + 1 boiled egg + cucumber", time: "0 min", p: "24 g" },
+    { type: "B", meal: "Greek yogurt + 1 tbsp chia + ½ scoop whey (stir, done)", time: "1 min", p: "28 g" },
     { type: "L", meal: "Costco rotisserie chicken 150 g + Amy's lentil soup + ½ c rice", time: "5 min", p: "42 g" },
     { type: "L", meal: "Kirkland canned salmon + pre-cooked rice pouch + any veg", time: "5 min", p: "35 g" },
     { type: "S", meal: "2 boiled eggs + small handful nuts", time: "0 min", p: "14 g" },
@@ -462,19 +656,19 @@ const EMERGENCY = {
   ],
   husband: [
     { type: "B", meal: "3 boiled eggs + 1 WW roti + yogurt", time: "3 min", p: "30 g" },
-    { type: "B", meal: "Greek yogurt + nuts + 2 eggs", time: "0 min", p: "26 g" },
+    { type: "B", meal: "Greek yogurt + chia + nuts + 2 eggs", time: "1 min", p: "28 g" },
     { type: "L", meal: "Rotisserie chicken 200 g + 1 roti + Amy's dal soup", time: "5 min", p: "50 g" },
     { type: "S", meal: "Cottage cheese + cucumber + apple", time: "0 min", p: "14 g" },
-    { type: "D", meal: "Pacific broth + chicken + spinach + 2 roti (heat broth, shred chicken in)", time: "10 min", p: "36 g" },
+    { type: "D", meal: "Pacific broth + chicken + spinach + 2 roti", time: "10 min", p: "36 g" },
     { type: "D", meal: "Dal reheat + 1 egg + 2 roti", time: "5 min", p: "28 g" },
   ],
   boys: [
-    { type: "B", meal: "Yogurt + 2 boiled eggs + WW toast + nuts each", time: "3 min", p: "38 g" },
-    { type: "B", meal: "Beef wrap from Sunday batch + 1 egg", time: "5 min", p: "35 g" },
-    { type: "L_school", meal: "PB & honey on sourdough + cheese stick + apple + nuts (zero-cook backup lunchbox)", time: "3 min", p: "22 g" },
+    { type: "B", meal: "Yogurt Power Bowl — yogurt + whey + chia + banana", time: "2 min", p: "38 g" },
+    { type: "B", meal: "Beef wrap from Sunday mince + 1 egg", time: "5 min", p: "35 g" },
+    { type: "L_school", meal: "PB & honey on WW bread + cheese stick + apple + nuts (zero-cook)", time: "3 min", p: "22 g" },
     { type: "L_school", meal: "Deli roast beef + WW tortilla + cheese + carrots + banana", time: "2 min", p: "32 g" },
-    { type: "S", meal: "PB energy balls × 2 + apple + string cheese", time: "0 min (pre-made)", p: "20 g" },
-    { type: "D", meal: "Pre-cooked beef mince + rice + dal reheat", time: "8 min", p: "48 g" },
+    { type: "S", meal: "Power Bowl — cottage cheese + yogurt + honey", time: "1 min", p: "25 g" },
+    { type: "D", meal: "Rice, Eggs & Cottage Cheese bowl + milk", time: "8 min", p: "42 g" },
     { type: "D", meal: "Beef meatballs (frozen Kirkland) + jarred marinara + rice", time: "12 min", p: "44 g" },
   ],
 };
@@ -485,7 +679,7 @@ const EMERGENCY = {
 const TABS = [
   { id: "today",    label: "Today" },
   { id: "week",     label: "Week" },
-  { id: "lunchbox", label: "School Lunches" },
+  { id: "lunchbox", label: "Kids' Bowls" },
   { id: "shopping", label: "Shopping" },
   { id: "batch",    label: "Sunday Batch" },
   { id: "rescue",   label: "Emergency" },
@@ -504,6 +698,22 @@ const todayIdx = () => {
   return d === 0 ? 6 : d - 1;       // Map Mon=0 ... Sun=6
 };
 
+// Auto-pick Week A on odd calendar weeks, B on even — the alternation runs itself
+const todayWeek = () => {
+  const now = new Date();
+  const start = new Date(now.getFullYear(), 0, 1);
+  const wk = Math.ceil(((now - start) / 86400000 + start.getDay() + 1) / 7);
+  return wk % 2 === 1 ? "A" : "B";
+};
+
+const WEEKS = { A: WEEK_A, B: WEEK_B };
+
+// Kids' lunch mode: home bowls in July–Aug, packed thermos versions in school year
+const defaultKidsMode = () => {
+  const m = new Date().getMonth(); // 0-indexed: 6 = July, 7 = August
+  return (m === 6 || m === 7) ? "summer" : "school";
+};
+
 // ════════════════════════════════════════════════════════════════════
 // Component
 // ════════════════════════════════════════════════════════════════════
@@ -511,6 +721,9 @@ function FamilyKitchenOS() {
   const [tab, setTab] = useState("today");
   const [dayIdx, setDayIdx] = useState(todayIdx());
   const [shopTab, setShopTab] = useState("weekly");
+  const [weekSel, setWeekSel] = useState(todayWeek());
+  const [kidsMode, setKidsMode] = useState(defaultKidsMode());
+  const schoolDay = (tag) => kidsMode === "school" && SCHOOL_LUNCH[tag];
   const [checked, setChecked] = useState({});
   const [openCat, setOpenCat] = useState({});
 
@@ -536,7 +749,7 @@ function FamilyKitchenOS() {
     setChecked(next);
   };
 
-  const d = WEEK[dayIdx];
+  const d = WEEKS[weekSel][dayIdx];
 
   // ─────────────────────────────────────────────────────────────
   // Sub-components
@@ -592,7 +805,7 @@ function FamilyKitchenOS() {
         <div style={{ fontFamily: "sans-serif", fontSize: 10, letterSpacing: 3, opacity: 0.7, marginBottom: 4 }}>FAMILY KITCHEN OS</div>
         <h1 style={{ fontSize: 22, margin: "0 0 4px", lineHeight: 1.2, fontWeight: 700 }}>One kitchen, four plates</h1>
         <p style={{ fontSize: 12, opacity: 0.78, margin: 0, fontFamily: "sans-serif", lineHeight: 1.5 }}>
-          Week 1 plan locked for you · Husband adapts · Boys diverge where needed · Cooking effort minimised
+          Maddie + Ari alternate Week A / B · Aayush & Archie run four anchor bowls, synced to the family pot · fewer cooking tracks
         </p>
       </div>
 
@@ -617,10 +830,38 @@ function FamilyKitchenOS() {
         {/* ───────────── TODAY / WEEK ───────────── */}
         {(tab === "today" || tab === "week") && (
           <>
+            {/* Week A/B toggle */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 12, alignItems: "center" }}>
+              {["A", "B"].map(w => (
+                <button key={w} onClick={() => setWeekSel(w)}
+                  style={{
+                    padding: "8px 16px", border: "none", borderRadius: 8, cursor: "pointer",
+                    fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
+                    background: weekSel === w ? "#1a3309" : "white",
+                    color: weekSel === w ? "white" : "#666",
+                    boxShadow: weekSel === w ? "0 2px 6px rgba(26,51,9,0.3)" : "0 1px 3px rgba(0,0,0,0.05)",
+                  }}>
+                  WEEK {w}
+                </button>
+              ))}
+              <span style={{ fontFamily: "sans-serif", fontSize: 10, color: "#999", lineHeight: 1.4, flex: 1 }}>
+                Alternates weekly · auto-set
+              </span>
+              <button onClick={() => setKidsMode(kidsMode === "summer" ? "school" : "summer")}
+                style={{
+                  padding: "8px 12px", border: `1px solid ${COLORS.boys.fg}`, borderRadius: 8, cursor: "pointer",
+                  fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, letterSpacing: 0.5,
+                  background: kidsMode === "school" ? COLORS.boys.fg : "white",
+                  color: kidsMode === "school" ? "white" : COLORS.boys.fg,
+                }}>
+                {kidsMode === "school" ? "🎒 SCHOOL" : "☀️ SUMMER"}
+              </button>
+            </div>
+
             {/* Day picker (only on Week tab) */}
             {tab === "week" && (
               <div style={{ display: "flex", gap: 4, overflowX: "auto", marginBottom: 14, paddingBottom: 6 }}>
-                {WEEK.map((dd, i) => (
+                {WEEKS[weekSel].map((dd, i) => (
                   <button key={dd.tag} onClick={() => setDayIdx(i)}
                     style={{
                       padding: "8px 12px", border: "none", borderRadius: 8, cursor: "pointer",
@@ -658,15 +899,19 @@ function FamilyKitchenOS() {
             <MealCard label="LUNCH" sub="12:30 – 2:00 PM" accent={accents.lunch}>
               <PersonRow who="wife"    data={d.lunch.wife} />
               <PersonRow who="husband" data={d.lunch.husband} />
-              {d.lunch.boysSchool === false && d.lunch.boys && <PersonRow who="boys" data={d.lunch.boys} />}
-              {d.lunch.boysSchool === true && (
+              {!schoolDay(d.tag) && d.lunch.boys && <PersonRow who="boys" data={d.lunch.boys} />}
+              {schoolDay(d.tag) && (
                 <div style={{ padding: "10px 14px", background: "#fffaf0", borderTop: "1px solid #f4f4f4", display: "flex", gap: 10 }}>
                   <div style={{ width: 38, height: 38, borderRadius: 8, background: COLORS.boys.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                     <span style={{ fontSize: 10, fontWeight: 700, color: COLORS.boys.fg }}>BOYS</span>
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: "sans-serif", fontSize: 12, color: COLORS.boys.fg, fontWeight: 700, letterSpacing: 0.5 }}>📦 PACKED LUNCH AT SCHOOL</div>
-                    <div style={{ fontFamily: "sans-serif", fontSize: 11, color: "#888", marginTop: 2 }}>See School Lunches tab → {d.day}</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 12, color: COLORS.boys.fg, fontWeight: 700, letterSpacing: 0.5 }}>📦 {SCHOOL_LUNCH[d.tag].name} (packed)</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 11, color: "#888", marginTop: 2 }}>School mode · see Kids' Bowls tab for pack list</div>
+                  </div>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: COLORS.boys.fg }}>{SCHOOL_LUNCH[d.tag].p}g</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#bbb" }}>{SCHOOL_LUNCH[d.tag].cal} cal</div>
                   </div>
                 </div>
               )}
@@ -693,8 +938,9 @@ function FamilyKitchenOS() {
                 const sum = (who) => {
                   const sm = d.snack[who]?.p ?? 0;
                   const bf = d.breakfast[who]?.p ?? 0;
-                  const ln = (d.lunch.boysSchool && who === "boys") ? (d.boysSchool?.p ?? 0) : (d.lunch[who]?.p ?? 0);
-                  const lncal = (d.lunch.boysSchool && who === "boys") ? (d.boysSchool?.cal ?? 0) : (d.lunch[who]?.cal ?? 0);
+                  const sch = who === "boys" && schoolDay(d.tag) ? SCHOOL_LUNCH[d.tag] : null;
+                  const ln = sch ? sch.p : (d.lunch[who]?.p ?? 0);
+                  const lncal = sch ? sch.cal : (d.lunch[who]?.cal ?? 0);
                   const sc = d.snack[who]?.cal ?? 0;
                   const bc = d.breakfast[who]?.cal ?? 0;
                   const dn = d.dinner[who]?.p ?? 0;
@@ -727,31 +973,90 @@ function FamilyKitchenOS() {
         {tab === "lunchbox" && (
           <div>
             <div style={{ background: COLORS.boys.fg, color: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 14 }}>
-              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.65, letterSpacing: 1.2 }}>BOYS · MIDDLE SCHOOL</div>
-              <h2 style={{ margin: "4px 0 6px", fontSize: 18 }}>5 packed lunches · Mon–Fri</h2>
+              <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.65, letterSpacing: 1.2 }}>AAYUSH & ARCHIE · 14 · SUMMER MODE</div>
+              <h2 style={{ margin: "4px 0 6px", fontSize: 18 }}>The 4 Anchor Bowls</h2>
               <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, opacity: 0.85, lineHeight: 1.5 }}>
-                All assemble in &lt;5 min. Beef + chicken + cheese + fruit + nuts. No fish. Sunday batch makes this almost zero-effort.
+                Their day runs on four repeatable meals — high protein, high calcium, no fish, and buildable by a 14-year-old without help. In school mode the lunch bowl goes in a thermos; breakfast, snack and dinner don't change.
               </p>
             </div>
-            {WEEK.filter(w => w.boysSchool && (w.tag !== "SAT" && w.tag !== "SUN")).map((w, i) => (
-              <div key={w.tag} style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)", borderLeft: `4px solid ${COLORS.boys.fg}` }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, color: "#222" }}>{w.day} · {w.boysSchool.name}</h3>
+
+            {/* Summer / School toggle */}
+            <div style={{ display: "flex", gap: 6, marginBottom: 14 }}>
+              {[["summer", "☀️ Summer — home bowls"], ["school", "🎒 School — packed thermos"]].map(([m, lbl]) => (
+                <button key={m} onClick={() => setKidsMode(m)}
+                  style={{
+                    flex: 1, padding: "10px 8px", border: "none", borderRadius: 8, cursor: "pointer",
+                    fontFamily: "sans-serif", fontSize: 11, fontWeight: 700,
+                    background: kidsMode === m ? COLORS.boys.fg : "white",
+                    color: kidsMode === m ? "white" : "#666",
+                    boxShadow: kidsMode === m ? "0 2px 6px rgba(196,80,0,0.3)" : "0 1px 3px rgba(0,0,0,0.05)",
+                  }}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+
+            {kidsMode === "school" && (
+              <>
+                <div style={{ background: "white", borderRadius: 12, padding: "12px 16px", marginBottom: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)" }}>
+                  <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: COLORS.boys.fg, letterSpacing: 1, marginBottom: 4 }}>🎒 5 PACKED LUNCHES · MON–FRI</div>
+                  <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#666", lineHeight: 1.55 }}>
+                    Same Sunday batch, same macros — the lunch bowl just travels. All pack in under 5 min; the kids can do it themselves the night before. Yogurt Power Bowl breakfast and the Power Bowl snack (after school, before practice) stay identical.
+                  </p>
+                </div>
+                {["MON", "TUE", "WED", "THU", "FRI"].map(tag => {
+                  const s = SCHOOL_LUNCH[tag];
+                  const dayNames = { MON: "Monday", TUE: "Tuesday", WED: "Wednesday", THU: "Thursday", FRI: "Friday" };
+                  return (
+                    <div key={tag} style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)", borderLeft: `4px solid ${COLORS.boys.fg}` }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                        <h3 style={{ margin: 0, fontSize: 15, color: "#222" }}>{dayNames[tag]} · {s.name}</h3>
+                        <div style={{ textAlign: "right" }}>
+                          <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: COLORS.boys.fg }}>{s.p}g</div>
+                          <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#aaa" }}>{s.cal} cal</div>
+                        </div>
+                      </div>
+                      <ul style={{ margin: 0, paddingLeft: 18 }}>
+                        {s.items.map((it, j) => (
+                          <li key={j} style={{ fontFamily: "sans-serif", fontSize: 12, color: "#555", lineHeight: 1.6 }}>{it}</li>
+                        ))}
+                      </ul>
+                      <div style={{ marginTop: 8, padding: "8px 10px", background: COLORS.boys.bg, borderRadius: 8 }}>
+                        <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 11, color: COLORS.boys.fg, lineHeight: 1.5 }}>💡 {s.tip}</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                <div style={{ height: 6 }} />
+              </>
+            )}
+            {ANCHORS.map((a, i) => (
+              <div key={i} style={{ background: "white", borderRadius: 12, padding: "14px 16px", marginBottom: 10, boxShadow: "0 1px 5px rgba(0,0,0,0.07)", borderLeft: `4px solid ${COLORS.boys.fg}` }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4 }}>
+                  <h3 style={{ margin: 0, fontSize: 15, color: "#222" }}>{a.name}</h3>
                   <div style={{ textAlign: "right" }}>
-                    <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: COLORS.boys.fg }}>{w.boysSchool.p}g</div>
-                    <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#aaa" }}>{w.boysSchool.cal} cal</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 13, fontWeight: 700, color: COLORS.boys.fg }}>{a.p}</div>
+                    <div style={{ fontFamily: "sans-serif", fontSize: 10, color: "#aaa" }}>{a.cal} cal</div>
                   </div>
                 </div>
+                <div style={{ fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, color: "#aaa", letterSpacing: 1, marginBottom: 8 }}>{a.slot}</div>
                 <ul style={{ margin: 0, paddingLeft: 18 }}>
-                  {w.boysSchool.items.map((it, j) => (
+                  {a.items.map((it, j) => (
                     <li key={j} style={{ fontFamily: "sans-serif", fontSize: 12, color: "#555", lineHeight: 1.6 }}>{it}</li>
                   ))}
                 </ul>
-                <div style={{ marginTop: 8, padding: "8px 10px", background: COLORS.boys.bg, borderRadius: 8 }}>
-                  <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 11, color: COLORS.boys.fg, lineHeight: 1.5 }}>💡 {w.boysSchool.tip}</p>
+                <div style={{ marginTop: 8, padding: "8px 10px", background: a.tip.startsWith("⚠️") ? "#fff3cd" : COLORS.boys.bg, borderRadius: 8 }}>
+                  <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 11, color: a.tip.startsWith("⚠️") ? "#664d03" : COLORS.boys.fg, lineHeight: 1.5 }}>{a.tip.startsWith("⚠️") ? a.tip : "💡 " + a.tip}</p>
                 </div>
               </div>
             ))}
+
+            <div style={{ background: "#eef7ff", border: "1px solid #a8ceef", borderRadius: 12, padding: "14px 16px", marginBottom: 10 }}>
+              <div style={{ fontFamily: "sans-serif", fontSize: 11, fontWeight: 700, color: "#1d3557", letterSpacing: 1, marginBottom: 6 }}>📏 THE HEIGHT + MUSCLE TRUTH</div>
+              <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#2c4a6e", lineHeight: 1.6 }}>
+                What actually drives growth at 14, in order: <b>sleep (9+ h)</b>, enough total calories, adequate protein (~1.6–2 g/kg — these bowls already exceed it), and resistance activity. No food or powder adds height beyond what genetics set. The bowls' real job is calcium, calories and convenience.
+              </p>
+            </div>
 
             {/* Snack station */}
             <div style={{ background: "#fff8e6", border: "1px solid #f4cd6b", borderRadius: 12, padding: "14px 16px", marginTop: 10 }}>
@@ -910,7 +1215,7 @@ function FamilyKitchenOS() {
             <div style={{ background: "#1b2838", borderRadius: 12, padding: "14px 16px", marginTop: 12, color: "white" }}>
               <div style={{ fontFamily: "sans-serif", fontSize: 10, opacity: 0.45, marginBottom: 6, letterSpacing: 1.2 }}>THE SYSTEM IN ONE SENTENCE</div>
               <div style={{ fontFamily: "sans-serif", fontSize: 13, opacity: 0.88, lineHeight: 1.7 }}>
-                Saturday's chicken soup batch covers Mon dinner. Sunday's 90-min batch covers Tue–Fri ingredients. You only actively cook 5 nights — and even those are 1 or 2 tracks max.
+                Saturday's batch soup covers Mon + Tue dinners. Sunday's 90-min batch (eggs, rice, mince, seared chicken, dal) runs the kids' bowls and everyone's reheats until Thursday. The kids assemble their own breakfast, snack and two dinners — you actively cook 1 to 1.5 tracks a night, never more.
               </div>
             </div>
           </div>
@@ -939,7 +1244,7 @@ function FamilyKitchenOS() {
                   {["B", "L", "L_school", "S", "D"].map(type => {
                     const typed = meals.filter(m => m.type === type);
                     if (typed.length === 0) return null;
-                    const labels = { B: "BREAKFAST", L: "LUNCH", L_school: "SCHOOL LUNCH", S: "SNACK", D: "DINNER" };
+                    const labels = { B: "BREAKFAST", L: "LUNCH", L_school: "GRAB & GO LUNCH", S: "SNACK", D: "DINNER" };
                     return (
                       <div key={type}>
                         <div style={{ fontFamily: "sans-serif", fontSize: 10, fontWeight: 700, color: "#aaa", letterSpacing: 1, margin: "8px 0 4px" }}>{labels[type]}</div>
@@ -1039,7 +1344,7 @@ function FamilyKitchenOS() {
 
             <div style={{ background: "#fff3cd", border: "1px solid #f0c060", borderRadius: 10, padding: "12px 14px", marginTop: 8 }}>
               <p style={{ margin: 0, fontFamily: "sans-serif", fontSize: 12, color: "#664d03", lineHeight: 1.55 }}>
-                <b>⚕️ Medical disclaimer:</b> These are the targets from your existing plan. Any changes to medication timing or dosing must be confirmed with the prescribing physician.
+                <b>⚕️ Medical disclaimer:</b> These are planning targets, not prescriptions. Any changes to medication timing or dosing must be confirmed with the prescribing physician. The boys' creatine is a parent call — flag it at their next checkup so any creatinine reading on bloodwork is interpreted correctly.
               </p>
             </div>
           </div>
@@ -1048,7 +1353,7 @@ function FamilyKitchenOS() {
       </div>
 
       <div style={{ textAlign: "center", padding: "14px 12px", fontFamily: "sans-serif", fontSize: 10, color: "#bbb", lineHeight: 1.6 }}>
-        Family of 4 · Vancouver BC · Costco + Safeway · Week 1 plan locked · v1
+        Maddie · Ari · Aayush & Archie · North Vancouver BC · Costco + Safeway · Week A/B rotation · v2
       </div>
     </div>
   );
